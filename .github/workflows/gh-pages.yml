@@ -10,14 +10,17 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-      - name: Use Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 16
+      - name: Setup Pages
+        id: pages
+        uses: actions/configure-pages@v3
       - name: Install dependencies
         run: npm ci
       - name: Compile
-        run: npm run build -- --base-href /endovis-ml/
+        run: npm run build -- --base-href ${{ steps.pages.outputs.base_path }}
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v1
         with:
