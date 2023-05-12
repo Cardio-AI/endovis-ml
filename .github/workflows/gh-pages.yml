@@ -19,7 +19,7 @@ jobs:
       - name: Compile
         run: npm run build -- --base-href /endovis-workflow/
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-pages-artifact@v1
         with:
           path: ./dist
 
