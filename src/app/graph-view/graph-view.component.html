@@ -1,0 +1,63 @@
+<div class="view-section graph-view">
+  <p class="view-section-header">Phase view</p>
+  <p class="view-section-description">Visualization of phases and phase transitions. Bar charts at the bottom represent instrument usage during a particual phase.</p>
+  <div class="view-section-content">
+    <div class="controls">
+<!--      <label for="graph-view-scale-select">Scale:</label>-->
+<!--      <select id="graph-view-scale-select">-->
+<!--        <option value="0">Absolute scale</option>-->
+<!--        <option value="1">Relative scale</option>-->
+<!--      </select>-->
+      <label for="graph-view-set-transitions-checkbox">Transition sets:</label>
+      <input id="graph-view-set-transitions-checkbox" type="checkbox">
+
+      <label for="graph-view-inst-scale-select">Instrument Scale:</label>
+      <select id="graph-view-inst-scale-select">
+        <option value="0">Absolute scale</option>
+        <option value="1">Phase scale</option>
+        <option value="2">Instrument scale</option>
+        <option value="3">Expand scale</option>
+      </select>
+
+
+<!--      <form>-->
+<!--        <label for="graph-view-threshold-input">Threshold:</label>-->
+<!--        <input id="graph-view-threshold-input" type="range" value="1">-->
+<!--        <output id="graph-view-threshold-output" for="graph-view-threshold-input">1</output>-->
+<!--      </form>-->
+    </div>
+    <svg id="graph-view-svg" width="100%" height="100%">
+      <g class="graph-view-labels"></g>
+      <g class="graph-view-phase-barchart"></g>
+      <g class="graph-view-separators"></g>
+      <g class="graph-view-links"></g>
+      <g class="graph-view-nodes"></g>
+      <g class="graph-view-links-data"></g>
+      <g class="graph-view-chart">
+        <g class="graph-view-phase-tooltip" opacity="0">
+          <rect width="100" height="66px" fill="#fed9a6" rx="5" stroke-width="1px" stroke="#a66102"
+                opacity="0.6"></rect>
+          <text font-size="11px">
+            <tspan dx="5px" dy="5px" font-weight="bold" dominant-baseline="text-before-edge"></tspan>
+            <tspan class="tooltip-train" x="0" dx="5px" dy="14px" dominant-baseline="text-before-edge"></tspan>
+            <tspan class="tooltip-validation" x="0" dx="5px" dy="14px" dominant-baseline="text-before-edge"></tspan>
+            <tspan class="tooltip-test" x="0" dx="5px" dy="14px" dominant-baseline="text-before-edge"></tspan>
+          </text>
+        </g>
+      </g>
+      <g class="graph-view-instrument-chart">
+        <g class="graph-view-instrument-occurrence"></g>
+        <g class="graph-view-instrument-tooltip" opacity="0">
+          <rect width="100" height="66px" fill="#fed9a6" rx="5" stroke-width="1px" stroke="#a66102"
+                opacity="0.6"></rect>
+          <text font-size="11px">
+            <tspan dx="5px" dy="5px" font-weight="bold" dominant-baseline="text-before-edge"></tspan>
+            <tspan class="tooltip-train" x="0" dx="5px" dy="14px" dominant-baseline="text-before-edge"></tspan>
+            <tspan class="tooltip-validation" x="0" dx="5px" dy="14px" dominant-baseline="text-before-edge"></tspan>
+            <tspan class="tooltip-test" x="0" dx="5px" dy="14px" dominant-baseline="text-before-edge"></tspan>
+          </text>
+        </g>
+      </g>
+    </svg>
+  </div>
+</div>

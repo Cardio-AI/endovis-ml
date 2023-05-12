@@ -1,0 +1,74 @@
+.set-assignment {
+  height: 300px;
+}
+
+.dataset-label {
+  display: flex;
+  flex-direction: row;
+  flex-grow: 0;
+}
+
+.dataset-label div{
+  color: white;
+  background-color: gray;
+  text-align: center;
+  font-size: 10pt;
+  font-weight: bold;
+  flex-grow: 1;
+  padding: 5px 0;
+}
+
+.dataset-label div:first-child {
+  border-radius: 5px 0 0 0;
+}
+
+.dataset-label div:last-child{
+  border-radius: 0 5px 0 0;
+}
+
+.dataset-content {
+  display: flex;
+  flex-direction: row;
+  flex-grow: 1;
+  border: 1px solid lightgray;
+}
+
+.dataset-column {
+  flex-grow: 1;
+  position: relative;
+  overflow-y: scroll;
+}
+
+
+.dataset-col-content {
+  position: absolute;
+  flex-grow: 1;
+  width: 100%;
+}
+
+.dataset-item {
+  padding: 4px;
+}
+
+.dataset-item:nth-child(odd) {
+  background-color: #f3f3f3;
+}
+
+.dataset-item-name {
+  font-size: 10pt;
+  font-weight: bold;
+}
+
+.dataset-item-duration {
+  font-size: 8pt;
+}
+
+
+/*.dataset-col-title {*/
+
+/*}*/
+
+/*.dataset-col-content {*/
+/*  !*min-height: 0;*!*/
+/*  overflow-y: scroll;*/
+/*}*/

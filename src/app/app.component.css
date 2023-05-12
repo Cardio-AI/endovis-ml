@@ -1,0 +1,51 @@
+#navbar {
+  height: 50px;
+  background-color: #3b3b3b;
+  display: flex;
+  align-items: center;
+}
+
+#navbar-list {
+  list-style-type: none;
+  margin-left: 6px;
+  padding: 0;
+  display: flex;
+  flex-direction: row;
+}
+
+.navbar-item {
+  padding: 10px;
+  border-radius: 10px 10px 0 0;
+  font-size: .9em;
+  transition: ease-in-out 100ms;
+}
+
+.navbar-item a {
+  color: white;
+  text-decoration: none;
+}
+
+.navbar-item:hover {
+  background-color: #676767;
+  transition: ease-in-out 100ms;
+}
+
+.navbar-item:hover a {
+  color: white;
+}
+
+.selected-item {
+  background-color: #F0F0F2;
+}
+
+.selected-item a {
+  color: black;
+}
+
+.menu {
+  color: white;
+  font-size: .9em;
+  padding: 10px;
+  font-weight: bolder;
+  cursor: pointer;
+}

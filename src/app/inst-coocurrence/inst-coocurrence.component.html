@@ -1,0 +1,44 @@
+<div class="view-section instrument-cooccurrence">
+  <p class="view-section-header">Instrument view</p>
+  <p class="view-section-description">Visualization of instruments and combinations of instruments that appear at the same time.</p>
+  <div class="controls">
+    <label for="instrument-cooccurrence-scale-checkbox">Individual scales:</label>
+    <input id="instrument-cooccurrence-scale-checkbox" type="checkbox">
+
+<!--    <label for="instrument-cooccurrence-unused-checkbox">Unused instruments:</label>-->
+<!--    <input id="instrument-cooccurrence-unused-checkbox" type="checkbox" checked>-->
+
+<!--        <label for="instrument-cooccurrence-aggregate-checkbox">Unused instruments:</label>-->
+<!--        <input id="instrument-cooccurrence-aggregate-checkbox" type="checkbox" checked>-->
+
+    <label for="instrument-cooccurrence-idle-checkbox">Idle time:</label>
+    <input id="instrument-cooccurrence-idle-checkbox" type="checkbox" checked>
+
+<!--    <label for="instrument-cooccurrence-highlight-checkbox">Highlight:</label>-->
+<!--    <input id="instrument-cooccurrence-highlight-checkbox" type="checkbox">-->
+  </div>
+  <div class="view-section-content">
+    <svg id="instrument-cooccurrence-svg" height="100%" width="100%">
+
+      <g class="instrument-cooccurrence-chart">
+        <g class="instrument-lines-g"></g>
+        <g class="instrument-nodes-g">
+          <g class="instrument-nodes-pie-g"></g>
+          <g class="instrument-nodes-meta-g"></g>
+        </g>
+        <g class="instrument-selected-nodes-g"></g>
+        <g class="instrument-labels-g"></g>
+
+        <g class="instrument-cooccurrence-tooltip" opacity="0">
+          <rect width="100" height="66px" fill="#fed9a6" rx="5" stroke-width="1px" stroke="#a66102" opacity="0.6"></rect>
+          <text font-size="11px">
+            <tspan dx="5px" dy="5px" font-weight="bold" dominant-baseline="text-before-edge"></tspan>
+            <tspan class="tooltip-train" x="0" dx="5px" dy="14px" dominant-baseline="text-before-edge"></tspan>
+            <tspan class="tooltip-validation" x="0" dx="5px" dy="14px" dominant-baseline="text-before-edge"></tspan>
+            <tspan class="tooltip-test" x="0" dx="5px" dy="14px" dominant-baseline="text-before-edge"></tspan>
+          </text>
+        </g>
+      </g>
+    </svg>
+  </div>
+</div>
