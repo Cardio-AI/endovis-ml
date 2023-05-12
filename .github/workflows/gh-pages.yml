@@ -17,7 +17,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
       - name: Compile
-        run: ng build --base-href /endovis-workflow/
+        run: npm run build -- --base-href /endovis-workflow/
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
