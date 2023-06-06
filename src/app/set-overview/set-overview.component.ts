@@ -94,7 +94,7 @@ export class SetOverviewComponent implements OnInit {
   // }
 
   private drawCharts() {
-    const margin = {top: 20, right: 0, bottom: 40, left: 0}; // global chart margin
+    const margin = {top: 20, right: 10, bottom: 40, left: 10}; // global chart margin
 
     const mainWidthFactor = 0.5;
     const mainChartWidth = this.svgWidth * mainWidthFactor - margin.left;
