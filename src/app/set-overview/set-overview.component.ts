@@ -94,15 +94,24 @@ export class SetOverviewComponent implements OnInit {
   // }
 
   private drawCharts() {
-    const margin = {left: 20, top: 20, right: 20, bottom: 20};
-    const mainChartWidth = this.svgWidth / 2; // half of total svg width
-    const secondaryChartWidth = this.svgWidth - mainChartWidth;
-    const mainSpaceBetween = 10;
+    const margin = {top: 20, right: 0, bottom: 40, left: 0}; // global chart margin
 
+    const mainWidthFactor = 0.5;
+    const mainChartWidth = this.svgWidth * mainWidthFactor - margin.left;
+    const mainSpaceBetweenCharts = 10;
+    const mainLabelTopMargin = 25;
+
+    const secondaryMarginLeft = 60;
+    const secondaryChartWidth = this.svgWidth * (1 - mainWidthFactor) - margin.right - secondaryMarginLeft;
+    const secondaryLabelMarginLeft = 15;
+
+    const selectedSps = this.selectionToSurgeryData(this.localSelectionCopy);
+
+    // dataset scale
     const setYScale = d3.scaleBand()
       .domain(CONSTANTS.datasets)
       .range([0, this.svgHeight - margin.top - margin.bottom])
-      .padding(.2);
+      .padding(.1);
 
     let setFrames = this.getNrFramesPerSet(this.localDatasetCopy);
     let maxFrames = d3.max(setFrames.map(e => e.value)) || 1;
@@ -112,12 +121,16 @@ export class SetOverviewComponent implements OnInit {
 
     const framesBarChartXScale = d3.scaleLinear()
       .domain([0, maxFrames])
-      .range([0, (mainChartWidth - margin.left - margin.right- mainSpaceBetween) / 2]);
+      .range([0, (mainChartWidth - mainSpaceBetweenCharts) / 2]);
 
     const filesBarChartXScale = d3.scaleLinear()
       .domain([0, maxFiles])
-      .range([(mainChartWidth - margin.left - margin.right - mainSpaceBetween) / 2, 0]);
+      .range([(mainChartWidth - mainSpaceBetweenCharts) / 2, 0]);
 
+    d3.select('.set-overview-charts')
+      .attr('transform', `translate(${margin.left},${margin.top})`);
+
+    // set labels
     d3.select('.set-overview-main-chart')
         .selectAll('.bar-chart-label')
         .data(CONSTANTS.datasets)
@@ -125,67 +138,15 @@ export class SetOverviewComponent implements OnInit {
           enter => enter.append('text')
             .attr('class', 'bar-chart-label')
             .attr('x', mainChartWidth / 2)
-            .attr('y', d => margin.top + (setYScale(d) || 0) + setYScale.bandwidth() / 2)
+            .attr('y', d => (setYScale(d) || 0) + setYScale.bandwidth() / 2)
             .attr('text-anchor', 'middle')
             .attr('dominant-baseline', 'middle')
-            .attr('font-size', '12')
+            .attr('font-size', 12)
             .text(d => d.charAt(0).toUpperCase() + d.slice(1))
         );
 
-    d3.select('.frames-bar-chart-g')
-      .attr('transform', `translate(${mainChartWidth / 2 + mainSpaceBetween / 2}, ${margin.top})`)
-      .selectAll<SVGSVGElement, DataCounterNew<string, number>>('.frames-rect')
-      .data(setFrames, k => k.object)
-      .join(
-        enter => enter.append('rect')
-          .attr('class', 'frames-rect')
-          .attr('x', framesBarChartXScale(0))
-          .attr('width', 0)
-          .attr('height', setYScale.bandwidth())
-      ).attr('fill', d => {
-      if (this.localSelectionCopy.length === 0) {
-        return CONSTANTS.datasetColors(d.object);
-      } else {
-        return 'lightgray';
-      }
-    }).attr('y', d => setYScale(d.object) || null)
-      .transition()
-      .duration(1000)
-      .attr('width', d => framesBarChartXScale(d.value));
-
-    const selectedSps = this.selectionToSurgeryData(this.localSelectionCopy);
-
-    d3.select('.frames-bar-chart-g')
-      .selectAll('.frames-rect-selected')
-      .data(this.getNrFramesPerSet(selectedSps))
-      .join(
-        enter => enter.append('rect')
-          .attr('class', 'frames-rect-selected')
-          .attr('x', framesBarChartXScale(0))
-          .attr('height', setYScale.bandwidth())
-          .attr('fill', d => CONSTANTS.datasetColors(d.object))
-          .attr('width', 0)
-      ).attr('y', d => setYScale(d.object) || 0)
-      .transition()
-      .duration(1000)
-      .attr('width', d => framesBarChartXScale(d.value));
-
-    d3.select<SVGGElement, any>('.frames-bar-chart-axis-g')
-      .attr('transform', `translate(0,${setYScale.range()[1]})`)
-      .call(d3.axisBottom<number>(framesBarChartXScale)
-        .tickValues(framesBarChartXScale.ticks(5).filter((tick:number) => Number.isInteger(tick)))
-        .tickFormat(d3.format('~s')))
-      .call(g => g.select(".domain")
-        .attr('stroke', 'gray'))
-      .call(g => g.selectAll('.tick')
-        .select('text')
-        .attr('fill', 'gray'))
-      .call(g => g.selectAll('.tick')
-        .select('line')
-        .attr('stroke', 'gray'));
-
+    // number of files per set
     d3.select('.files-bar-chart-g')
-      .attr('transform', `translate(${margin.left}, ${margin.top})`)
       .selectAll<SVGSVGElement, DataCounterNew<string, number>>('.files-rect')
       .data(setFiles, k => k.object)
       .join(
@@ -236,9 +197,106 @@ export class SetOverviewComponent implements OnInit {
         .select('line')
         .attr('stroke', 'gray'));
 
+    d3.select('.files-bar-chart-g')
+      .selectAll('.files-bar-chart-label')
+      .data(['No. of files'])
+      .join(
+        enter => enter.append('text')
+          .attr('class', 'files-bar-chart-label')
+          .attr('text-anchor', 'middle')
+          .attr('dominant-baseline', 'hanging')
+          .attr('y', setYScale.range()[1] + mainLabelTopMargin)
+          .attr('x', (mainChartWidth - mainSpaceBetweenCharts) / 4)
+          .attr('font-size', 12)
+          .html(d => d)
+      );
+
+    // number of frames per set
+    d3.select('.frames-bar-chart-g')
+      .attr('transform', `translate(${(mainChartWidth + mainSpaceBetweenCharts) / 2}, 0)`)
+      .selectAll<SVGSVGElement, DataCounterNew<string, number>>('.frames-rect')
+      .data(setFrames, k => k.object)
+      .join(
+        enter => enter.append('rect')
+          .attr('class', 'frames-rect')
+          .attr('x', framesBarChartXScale(0))
+          .attr('width', 0)
+          .attr('height', setYScale.bandwidth())
+      ).attr('fill', d => {
+      if (this.localSelectionCopy.length === 0) {
+        return CONSTANTS.datasetColors(d.object);
+      } else {
+        return 'lightgray';
+      }
+    }).attr('y', d => setYScale(d.object) || null)
+      .transition()
+      .duration(1000)
+      .attr('width', d => framesBarChartXScale(d.value));
+
+
+    // number of frames per set (selection)
+    d3.select('.frames-bar-chart-g')
+      .selectAll('.frames-rect-selected')
+      .data(this.getNrFramesPerSet(selectedSps))
+      .join(
+        enter => enter.append('rect')
+          .attr('class', 'frames-rect-selected')
+          .attr('x', framesBarChartXScale(0))
+          .attr('height', setYScale.bandwidth())
+          .attr('fill', d => CONSTANTS.datasetColors(d.object))
+          .attr('width', 0)
+      ).attr('y', d => setYScale(d.object) || 0)
+      .transition()
+      .duration(1000)
+      .attr('width', d => framesBarChartXScale(d.value));
+
+    // axis number of frames per set
+    d3.select<SVGGElement, any>('.frames-bar-chart-axis-g')
+      .attr('transform', `translate(0,${setYScale.range()[1]})`)
+      .call(d3.axisBottom<number>(framesBarChartXScale)
+        .tickValues(framesBarChartXScale.ticks(5).filter((tick:number) => Number.isInteger(tick)))
+        .tickFormat(d3.format('~s')))
+      .call(g => g.select(".domain")
+        .attr('stroke', 'gray'))
+      .call(g => g.selectAll('.tick')
+        .select('text')
+        .attr('fill', 'gray'))
+      .call(g => g.selectAll('.tick')
+        .select('line')
+        .attr('stroke', 'gray'));
+
+    d3.select('.frames-bar-chart-g')
+      .selectAll('.frames-bar-chart-label')
+      .data(['No. of frames'])
+      .join(
+        enter => enter.append('text')
+          .attr('class', 'frames-bar-chart-label')
+          .attr('text-anchor', 'middle')
+          .attr('dominant-baseline', 'hanging')
+          .attr('y', setYScale.range()[1] + mainLabelTopMargin)
+          .attr('x', (mainChartWidth - mainSpaceBetweenCharts) / 4)
+          .attr('font-size', 12)
+          .html(d => d)
+      );
+
     // draw secondary charts
-    d3.select('.set-overview-secondary-chart-g')
-      .attr('transform', `translate(${mainChartWidth + margin.left}, ${margin.top})`)
+    d3.select('.set-overview-secondary-charts')
+      .attr('transform', `translate(${mainChartWidth},0)`);
+
+    d3.select('.set-overview-secondary-charts')
+      .selectAll('.secondary-chart-label')
+      .data(['No. of frames'])
+      .join(
+        enter => enter.append('text')
+          .attr('class', 'secondary-chart-label')
+          .attr('text-anchor', 'middle')
+          .attr('dominant-baseline', 'hanging')
+          .attr('transform', 'rotate(-90)')
+          .attr('y', secondaryLabelMarginLeft) // x and y are swapped
+          .attr('x', -setYScale.range()[1] / 2)
+          .attr('font-size', 12)
+          .html(d => d)
+      );
 
     const maxDuration = d3.max(this.localDatasetCopy.map(e => e.phaseData.length))! || 1;
 
@@ -247,36 +305,28 @@ export class SetOverviewComponent implements OnInit {
       .domain([0, maxDuration]) // initial value
       .range([setYScale.bandwidth(), 0]);
 
-    const secondaryChartG = d3.select('.set-overview-secondary-chart-g')
-      .selectAll('.set-overview-secondary-set-g')
+    const secondaryChartG = d3.select('.set-overview-secondary-charts')
+      .selectAll('.frames-secondary-bar-chart')
       .data(CONSTANTS.datasets)
       .join(
         enter => enter.append('g')
-          .attr('class', 'set-overview-secondary-set-g')
-          .attr('transform', d => `translate(0,${setYScale(d)})`)
+          .attr('class', 'frames-secondary-bar-chart')
+          .attr('transform', d => `translate(${secondaryMarginLeft},${setYScale(d)})`)
       );
 
+    // for each set
     secondaryChartG.each((pData, i, nodes) => {
-      const data = this.localDatasetCopy.filter(e => e.set === pData);
-      let meanDuration = d3.mean(data.map(e => e.duration)) || 0;
+      const setSurgeries = this.localDatasetCopy.filter(e => e.set === pData);
+      let meanDuration = d3.mean(setSurgeries.map(e => e.duration)) || 0;
 
       const xSecondaryChartScales = d3.scaleBand<number>()
-        .domain(data.map(e => e.spNr))
-        .range([0, secondaryChartWidth - margin.left - margin.right])
+        .domain(setSurgeries.map(e => e.spNr))
+        .range([0, secondaryChartWidth])
         .padding(.1);
 
       d3.select(nodes[i])
-        .selectAll('.chart-g')
-        .data([data])
-        .join(
-          enter => enter.append('g')
-            .attr('class', 'chart-g')
-        );
-
-      d3.select(nodes[i])
-        .select('.chart-g')
         .selectAll<SVGSVGElement, SurgeryData>('.set-overview-secondary-rect')
-        .data(data, k => k.spNr)
+        .data(setSurgeries, k => k.spNr)
         .join(
           enter => enter.append('rect')
             .attr('class', 'set-overview-secondary-rect')
