@@ -114,7 +114,7 @@ See the example configuration file below.
 ```
 
 ## Citation
-This work was presented at the 14th International Conference on Information Processing in Computer-Assisted Interventions (IPCAI 2023) as a long abstract. Publication preprint is available at [arXiv](https://doi.org/10.48550/arXiv.2306.16879). Use the following BibTeX if you want to cite our work.
+This work was presented at the [14th International Conference on Information Processing in Computer-Assisted Interventions (IPCAI 2023)](https://www.ipcai.org/home) as a long abstract. Publication preprint is available at [arXiv](https://doi.org/10.48550/arXiv.2306.16879). Use the following BibTeX if you want to cite our work.
 
 ```BibTeX
 @misc{kostiuchik2023,
