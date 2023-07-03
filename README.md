@@ -53,7 +53,7 @@ Instrument annotation files should be formatted according to the following rules
 See the example of an instrument annotation file below.
 
 ```CSV
-Frame,Grasper,Bipolar,Hook,Scissors,Clipper,TIrrigator,SpecimenBag
+Frame,Grasper,Bipolar,Hook,Scissors,Clipper,Irrigator,SpecimenBag
 0,1,0,0,0,0,0,0
 25,0,1,0,0,0,0,0
 50,1,0,0,0,0,0,0
