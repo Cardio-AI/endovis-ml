@@ -1,4 +1,4 @@
 export interface PhaseAnnotationRow {
-  frame: number;
-  phase: number;
+  Frame: number;
+  Phase: number;
 }

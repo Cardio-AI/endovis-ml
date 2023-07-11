@@ -10,6 +10,12 @@ import {DatasetFilterPipe} from './pipe/dataset-filter.pipe';
 import {SetOverviewComponent} from './set-overview/set-overview.component';
 import {GraphViewComponent} from './graph-view/graph-view.component';
 import {InstCoocurrenceComponent} from './inst-coocurrence/inst-coocurrence.component';
+import {LandingComponent} from './landing/landing.component';
+import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
+import {UploadComponent} from './upload/upload.component';
+import {FileDropDirective} from './directives/file-drop.directive';
+import {FormsModule} from "@angular/forms";
+import {CapitalizePipe} from './pipe/capitalize.pipe';
 
 @NgModule({
   declarations: [
@@ -19,13 +25,19 @@ import {InstCoocurrenceComponent} from './inst-coocurrence/inst-coocurrence.comp
     DatasetFilterPipe,
     SetOverviewComponent,
     GraphViewComponent,
-    InstCoocurrenceComponent
+    InstCoocurrenceComponent,
+    LandingComponent,
+    UploadComponent,
+    FileDropDirective,
+    CapitalizePipe
   ],
-  imports: [
-    BrowserModule,
-    AppRoutingModule,
-    HttpClientModule,
-  ],
+    imports: [
+        BrowserModule,
+        AppRoutingModule,
+        HttpClientModule,
+        BrowserAnimationsModule,
+        FormsModule
+    ],
   providers: [],
   bootstrap: [AppComponent]
 })
