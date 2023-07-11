@@ -1,6 +1,6 @@
 export interface DataCounterNew<T,U> {
 
-  id?: number
+  id?: number;
   object: T;
   value: U;
 }

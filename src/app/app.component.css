@@ -49,3 +49,7 @@
   font-weight: bolder;
   cursor: pointer;
 }
+
+#component-container {
+  padding: 3px;
+}

@@ -1077,12 +1077,12 @@ export class GraphViewComponent implements OnInit {
       let spObj = this.localDatasetCopy.find(s => s.spNr === sp.object)!;
 
       sp.value.forEach(occ => { // for each occurrence
-        let startIdx = spObj.phaseData.findIndex(f => f.frame === occ.start)!;
+        let startIdx = spObj.phaseData.findIndex(f => f.Frame === occ.start)!;
 
-        let endIdx = spObj.phaseData.findIndex(f => f.frame === occ.end)!;
+        let endIdx = spObj.phaseData.findIndex(f => f.Frame === occ.end)!;
 
-        let currPhase = spObj.phaseData[endIdx]?.phase;
-        let nextPhase = spObj.phaseData[endIdx + 1]?.phase;
+        let currPhase = spObj.phaseData[endIdx]?.Phase;
+        let nextPhase = spObj.phaseData[endIdx + 1]?.Phase;
 
         if(startIdx === 0) { // start transition
           let resultEntry = result.find(t => t.object.start === '8888' && t.object.end === currPhase + "");
@@ -1108,7 +1108,7 @@ export class GraphViewComponent implements OnInit {
           if(nextPhase === undefined) {
             nextPhase = 9999;
           } else {
-            let nextFrame = spObj.phaseData[endIdx + 1]?.frame;
+            let nextFrame = spObj.phaseData[endIdx + 1]?.Frame;
             nextOccurr = sp.value.find(t => t.start === nextFrame);
           }
 
