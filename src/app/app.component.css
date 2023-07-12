@@ -1,8 +1,7 @@
 #navbar {
-  height: 50px;
+  height: 40px;
   background-color: #3b3b3b;
   display: flex;
-  align-items: center;
 }
 
 #navbar-list {
@@ -10,46 +9,63 @@
   margin-left: 6px;
   padding: 0;
   display: flex;
+  align-items: center;
   flex-direction: row;
+
 }
 
-.navbar-item {
-  padding: 10px;
-  border-radius: 10px 10px 0 0;
-  font-size: .9em;
-  transition: ease-in-out 100ms;
-}
-
-.navbar-item a {
+a {
   color: white;
   text-decoration: none;
 }
 
-.navbar-item:hover {
-  background-color: #676767;
-  transition: ease-in-out 100ms;
-}
+/*.navbar-item {*/
+/*  padding: 10px;*/
+/*  border-radius: 10px 10px 0 0;*/
+/*  font-size: .9em;*/
+/*  transition: ease-in-out 100ms;*/
+/*}*/
 
-.navbar-item:hover a {
-  color: white;
-}
+/*.navbar-item a {*/
+/*  color: white;*/
+/*  text-decoration: none;*/
+/*}*/
 
-.selected-item {
-  background-color: #F0F0F2;
-}
+/*.navbar-item:hover {*/
+/*  background-color: #676767;*/
+/*  transition: ease-in-out 100ms;*/
+/*}*/
 
-.selected-item a {
-  color: black;
-}
+/*.navbar-item:hover a {*/
+/*  color: white;*/
+/*}*/
+
+/*.selected-item {*/
+/*  background-color: #F0F0F2;*/
+/*}*/
+
+/*.selected-item a {*/
+/*  color: black;*/
+/*}*/
 
 .menu {
   color: white;
-  font-size: .9em;
-  padding: 10px;
-  font-weight: bolder;
+  font-size: 20pt;
+  margin-left: 10px;
+  font-weight: lighter;
   cursor: pointer;
+  text-align: center;
+}
+
+.home {
+  font-size: 14pt;
+  margin-left: 15px;
+  text-align: center;
+
 }
 
 #component-container {
   padding: 3px;
 }
+
+

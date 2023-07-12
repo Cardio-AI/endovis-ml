@@ -1,0 +1,45 @@
+.button {
+  background-color: #3d98d0;
+  transition: opacity 100ms ease-in;
+  border-radius: 4px;
+  border: none;
+  color: white;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.button:hover {
+  opacity: 0.9;
+}
+
+.button-large {
+  font-size: 14pt;
+  width: 230px;
+  padding: 5px 0;
+}
+
+.button-medium {
+  font-size: 12pt;
+  padding: 2px 15px;
+}
+
+.button-small {
+  font-size: 7px;
+}
+
+/*.buttons-full {*/
+/*  display: flex;*/
+/*  flex-direction: row;*/
+/*  flex-grow: 1;*/
+/*  justify-content: center;*/
+/*  column-gap: 10pt;*/
+/*}*/
+
+/*.buttons-fit {*/
+/*  display: flex;*/
+/*  flex-direction: row;*/
+/*  flex-grow: 1;*/
+/*  justify-content: center;*/
+/*  column-gap: 10pt;*/
+/*}*/
