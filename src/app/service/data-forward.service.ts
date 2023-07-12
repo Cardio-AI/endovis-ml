@@ -1,21 +1,14 @@
-import { Injectable } from '@angular/core';
-import {Subject} from "rxjs";
+import {Injectable} from '@angular/core';
 import {SurgeryData} from "../model/SurgeryData";
-import {DataCounterNew} from "../model/DataCounterNew";
-import {Occurrence} from "../model/Occurrence";
 
+
+// This service forwards the data to the set-assignment component
 @Injectable({
   providedIn: 'root'
 })
 export class DataForwardService {
 
-  private dataset = new Subject<SurgeryData[]>();
-
-  dataset$ = this.dataset.asObservable();
+  dataset: SurgeryData[] = [];
 
   constructor() { }
-
-  updateDataset(dataset: SurgeryData[]) {
-    this.dataset.next(dataset);
-  }
 }

@@ -1,4 +1,6 @@
 /* You can add global styles to this file, and also import other style files */
+@import url('./buttons.css');
+
 body {
   margin: 0;
   font-family: Helvetica, sans-serif;
@@ -51,49 +53,6 @@ body {
   justify-content: space-around;
 }
 
-.button {
-  background-color: #3d98d0;
-  transition: opacity 100ms ease-in;
-  border-radius: 4px;
-  border: none;
-  color: white;
-  text-align: center;
-  text-decoration: none;
-  cursor: pointer;
-}
-
-.button:hover {
-  opacity: 0.9;
-}
-
-.button-large {
-  font-size: 16pt;
-}
-
-.button-medium {
-  font-size: 12pt;
-  padding: 2px 15px;
-}
-
-.button-small {
-  font-size: 7px;
-}
-
-.buttons-full {
-  display: flex;
-  flex-direction: row;
-  flex-grow: 1;
-  justify-content: center;
-  column-gap: 10pt;
-}
-
-.buttons-fit {
-  display: flex;
-  flex-direction: row;
-  flex-grow: 1;
-  justify-content: center;
-  column-gap: 10pt;
-}
 
 /* from input styling */
 .input-select, .input-text, .input-textarea {
