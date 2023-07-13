@@ -4,7 +4,7 @@
 }
 
 .landing-dialog {
-  width: 40%;
+  width: 550px;
   display: flex;
   flex-grow: 0;
   flex-direction: column;
@@ -12,7 +12,6 @@
 }
 
 .landing-dialog-header {
-  text-align: center;
 }
 
 .landing-dialog-text * {

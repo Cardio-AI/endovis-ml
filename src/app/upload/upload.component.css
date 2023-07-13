@@ -5,17 +5,22 @@
 
 .upload-dialog {
   display: flex;
-  width: 40%;
+  width: 550px;
   flex-grow: 0;
   flex-direction: column;
   padding: 2% 3%;
 }
 
-.upload-dialog-form {
-  display: flex;
-  flex-direction: column;
+#file-upload {
+  display: none;
 }
-.upload-dialog-form-files {
+
+/*.browse-button {*/
+/*  color: blue;*/
+/*  cursor: pointer;*/
+/*}*/
+
+.upload-area {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -28,17 +33,18 @@
   cursor: pointer;
 }
 
-.form-element {
-  margin-top: 20px;
-}
-
-#upload-dialog-form-files-message {
+#upload-status {
   font-size: 24px;
   user-select: none;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
   align-items: center;
+  pointer-events: none;
+}
+
+.form-element {
+  margin-top: 20px;
 }
 
 .form-input-element {
@@ -46,17 +52,17 @@
   flex-direction: column;
 }
 
-.buttons {
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-}
-
 .form-buttons {
   display: flex;
   flex-direction: row;
   justify-content: center;
   gap: 20px;
+  margin-top: 7px;
+}
+
+.form-submit {
+  display: flex;
+  justify-content: center;
 }
 
 .upload-dialog-form-files-dragging {
@@ -68,39 +74,56 @@
   color: gray;
 }
 
-select {
-  background-position: left 100px top 50%, 0 0;
-}
-
-#file-upload {
-  display: none;
-}
-
 .cross-val-row {
   display: flex;
   flex-direction: row;
   /*gap: 0 30px;*/
 }
-.table {
-  margin: 7px 0;
-}
 
-.table-cell {
+/*.table {*/
+/*  margin: 7px 0;*/
+/*}*/
+
+.input-cell {
   resize: none;
   font-family: Helvetica, sans-serif;
-  font-size: 16px;
-  height: 50px;
+  font-size: 10pt;
+  height: 100px;
   flex-grow: 1;
-  box-sizing: border-box;
   outline: none;
   border: 1px solid #dadada;
   padding: 5px 5px;
-
   margin-bottom: -1px;
+}
+
+.table-header:first-child, .row-number  {
+  font-size: 10pt;
+  width: 10%;
+}
+
+.table-header:not(:first-child), .input-cell {
+  font-size: 10pt;
+  width: 45%;
+}
+
+.row-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #dadada;
+  margin-bottom: -1px;
+}
+
+textarea {
+  margin: 0;
+}
+
+.input-label {
+  font-weight: bold;
+  font-size: 12pt;
 }
 
 .add-row {
   background-color: gray;
   text-align: center;
 }
-

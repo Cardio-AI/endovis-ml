@@ -1,10 +1,29 @@
 <div class="upload">
   <div class="view-section upload-dialog">
-    <div class="upload-dialog-form">
-      <input type="file" id="file-upload" (input)="readFiles($event)" multiple>
+    <h1 class="dialog-header">Dataset upload</h1>
+
+    <p class="input-description">Upload the phase and instrument annotation files in DSV format by dragging and dropping
+      or by opening the file browser. Phase and instrument annotations of a single surgery should be stored in two separate
+      files. For this reason, the filenames should include a string that distinguishes phase annotation files from
+      instrument annotation files (<i>phase file identifier</i> or <i>instrument file identifier</i>).
+      Furthermore, filenames should have an integer that uniquely identifies a surgery (<i>surgery ID</i>). For example,
+      in the filename <code>video12_inst.csv</code> the substring <code>inst</code> represents an instrument file
+      identifier and indicates that this file contains instrument annotations. Furthermore, this filename includes an
+      integer <code>12</code> which represents a <i>surgery ID</i>. Accordingly, the corresponding phase annotation file should
+      be named <code>video12_phase.csv</code>.</p>
+
+    <p class="input-description">The files themselves should contain a header row and frame-wise annotations of surgical
+      phases and instruments. Phase annotation files must have <code>Frame,Phase</code> header row (case-sensitive).
+      Furthermore, phases must be encoded as integers starting from 0. Instrument annotation files must include a header
+      row <code>Frame,...</code> with a column for each individual instrument (case-sensitive). The application
+      currently supports only binary instrument annotations where 1 means that the instrument is used and 0 means that
+      the instrument is not used.
+    </p>
+
+    <input type="file" id="file-upload" (input)="readFiles($event)" multiple #fileUpload>
       <label for="file-upload">
-        <div class="upload-dialog-form-files" appFileDrop>
-          <div id="upload-dialog-form-files-message">
+        <div class="upload-area" appFileDrop>
+          <div id="upload-status">
             <ng-container *ngIf="uploadedFiles.length; else notUploaded">
               <span>{{uploadedFiles.length + " files uploaded"}}</span>
               <ng-container *ngIf="uploadedFiles.length < selectedFiles.length; else uploadSuccess">
@@ -12,87 +31,91 @@
               </ng-container>
             </ng-container>
 
-
             <ng-template #notUploaded>
-              Drag and drop or click to browse
+              <span>Drag and drop files or click to browse</span>
             </ng-template>
 
             <ng-template #uploadSuccess>
-              &#9989;
+              <div style="font-size: 18px">&#9989;</div>
             </ng-template>
           </div>
+
         </div>
       </label>
 
+
+    <div class="form-element form-input-element">
+      <label class="input-label" for="delimiter">Value delimiter</label>
+      <p class="input-description">Select the delimiter that is used in phase and instrument annotation files.</p>
+      <select class="input-select" id="delimiter" [(ngModel)]="delimiter">
+        <option *ngFor="let delimiter of allDelimiters" [value]="delimiter">{{ delimiter | capitalize }}</option>
+      </select>
+    </div>
+
       <div class="form-element form-input-element">
-        <label for="separator">Value delimiter</label>
-        <select class="input-select" id="separator" [(ngModel)]="delimiter">
-          <option *ngFor="let separator of separators" [value]="separator">{{ separator | capitalize }}</option>
-          <!--          <option value="tab">Tab</option>-->
-          <!--          <option value="semicolon">Semicolon</option>-->
-        </select>
-        <span class="form-hint">Value separator used in phase and instrument annotation files</span>
+        <label class="input-label" for="phase-id">Phase file identifier</label>
+        <p class="input-description">Define the <i>phase file identifier</i>. It represents a substring of the filename that is
+          specific for phase annotation files. See the example above.</p>
+        <input type="text" class="input-text" id="phase-id" placeholder="Example: phase" [(ngModel)]="phaseId">
       </div>
 
       <div class="form-element form-input-element">
-        <label for="phase-id">Phase file identifier</label>
-        <input type="text" class="input-text" id="phase-id" placeholder="e.g. phase" [(ngModel)]="phaseId">
-        <span class="form-hint">Part of file name that is specific for phase annotation files</span>
+        <label class="input-label" for="inst-id">Instrument file identifier</label>
+        <p class="input-description">Define the <i>instrument file identifier</i>. It represents a substring of the filename
+          that is specific for instrument annotation files. See the example above.</p>
+        <input type="text" class="input-text" id="inst-id" placeholder="Example: inst" [(ngModel)]="instId">
       </div>
 
       <div class="form-element form-input-element">
-        <label for="inst-id">Instrument file identifier</label>
-        <input type="text" class="input-text" id="inst-id" placeholder="e.g. tool" [(ngModel)]="instId">
-        <span class="form-hint">Part of file name that is specific for instrument annotation files</span>
+        <label class="input-label" for="phase-labels">Phase labels</label>
+        <p class="input-description">Provide a comma-separated list of names of all surgical phases that are present in
+          the dataset. Note that the names should be ordered with respect to the integer that they are assigned in phase
+          annotations files.</p>
+        <textarea class="input-textarea" id="phase-labels" [(ngModel)]="phaseLabels" placeholder="Example: Preparation, Calot triangle dissection, ..."></textarea>
       </div>
 
       <div class="form-element form-input-element">
-        <label for="phase-labels">Phase labels</label>
-        <textarea class="input-textarea" id="phase-labels" [(ngModel)]="phaseLabels"></textarea>
-        <span class="form-hint">Comma-separated list of phase labels (ordered)</span>
+        <label class="input-label" for="inst-labels">Instrument labels</label>
+        <p class="input-description">Provide a comma-separated list of names of all surgical phases that are present in
+          the dataset.</p>
+        <textarea class="input-textarea" id="inst-labels" [(ngModel)]="instLabels" placeholder="Example: Grasper, Bipolar, ..."></textarea>
       </div>
 
       <div class="form-element form-input-element">
-        <label for="phase-labels">Instrument labels</label>
-        <textarea class="input-textarea" id="inst-labels" [(ngModel)]="instLabels"></textarea>
-        <span class="form-hint">Comma-separated list of instrument labels</span>
-      </div>
+        <label class="input-label">Cross-validation splits</label>
+        <p class="input-description">Provide dataset splits and the corresponding comma-separated lists of <i>surgery IDs</i>.</p>
 
-      <div class="form-element form-input-element">
-        <label>Cross-validation splits</label>
 
         <div class="table">
-          <div class="table-header">
-            <div>Training</div>
-            <div>Validation</div>
+          <div class="table-header-row">
+            <div class="table-header">Split</div>
+            <div class="table-header">Training</div>
+            <div class="table-header">Validation</div>
           </div>
           <ng-container *ngFor="let _ of crossValSplit; let i = index">
             <div class="table-row">
-              <textarea class="table-cell" [(ngModel)]="crossValSplit[i][0]"></textarea>
-              <textarea class="table-cell" [(ngModel)]="crossValSplit[i][1]"></textarea>
+              <div class="row-number">Split {{ i + 1 }}</div>
+              <textarea class="input-cell" [(ngModel)]="crossValSplit[i][0]" placeholder="Example: 1, 2, ..."></textarea>
+              <textarea class="input-cell" [(ngModel)]="crossValSplit[i][1]" placeholder="Example: 41, 42, ..."></textarea>
             </div>
           </ng-container>
         </div>
 
       </div>
-      <div class="cross-val-row">
-        <span class="form-hint">Comma-separated list of surgery IDs of the cross-validation splits</span>
-      </div>
 
       <div class="form-buttons">
-        <button class="button button-medium" (click)="addSplit()">+</button>
-        <button class="button button-medium" (click)="removeSplit()">-</button>
+        <button class="button button-medium" (click)="addSplit()">Add split</button>
+        <button class="button button-medium" (click)="removeSplit()">Remove split</button>
       </div>
 
       <div class="form-element form-input-element">
         <label for="test-set">Test split</label>
-        <textarea class="input-textarea" id="test-set" [(ngModel)]="testSet"></textarea>
-        <span class="form-hint">Comma-separated list of surgery IDs from the test set</span>
+        <p class="input-description">Provide a comma-separated list of <i>surgery IDs</i> from the test dataset.</p>
+        <textarea class="input-textarea" id="test-set" [(ngModel)]="testSet" placeholder="Example: 81, 82, ..."></textarea>
       </div>
 
-      <div class="form-element form-buttons">
-        <button class="button button-large" (click)="processFiles()">Process data</button>
+      <div class="form-element form-submit">
+        <button class="button button-large" (click)="processFiles()">Visualize data</button>
       </div>
-    </div>
   </div>
 </div>

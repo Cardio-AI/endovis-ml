@@ -7,6 +7,7 @@
   text-align: center;
   text-decoration: none;
   cursor: pointer;
+  user-select: none;
 }
 
 .button:hover {
@@ -20,26 +21,11 @@
 }
 
 .button-medium {
-  font-size: 12pt;
-  padding: 2px 15px;
+  font-size: 10pt;
+  width: 90px;
+  padding: 2px 0;
 }
 
 .button-small {
   font-size: 7px;
 }
-
-/*.buttons-full {*/
-/*  display: flex;*/
-/*  flex-direction: row;*/
-/*  flex-grow: 1;*/
-/*  justify-content: center;*/
-/*  column-gap: 10pt;*/
-/*}*/
-
-/*.buttons-fit {*/
-/*  display: flex;*/
-/*  flex-direction: row;*/
-/*  flex-grow: 1;*/
-/*  justify-content: center;*/
-/*  column-gap: 10pt;*/
-/*}*/
