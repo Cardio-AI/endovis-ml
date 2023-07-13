@@ -57,9 +57,9 @@ body {
 /* from input styling */
 .input-select, .input-text, .input-textarea {
   width: 100%;
-  font-size: 11pt;
+  font-size: 10pt;
   padding: 5px 5px;
-  margin: 4px 0;
+  /*margin: 4px 0;*/
   border: 1px solid #dadada;
   border-radius: 4px;
   box-sizing: border-box;
@@ -73,24 +73,23 @@ body {
   resize: none;
 }
 
-.input-select:focus, .input-text:focus, .input-textarea:focus {
+.input-select:focus, .input-text:focus, .input-textarea:focus, .input-cell:focus {
   box-shadow: 0 0 4px #4195fc;
-  outline: none;
   z-index: 1;
 }
 
-/*.input-element-square:focus {*/
 /*  box-shadow: 0 0 0 #4195fc;*/
 /*  outline: none;*/
 /*  z-index: 1;*/
 /*}*/
 
-.table-header {
+.table {
+  border-radius: 20px;
+}
+
+.table-header-row {
   display: flex;
   flex-direction: row;
-  justify-content: space-around;
-
-
   color: white;
   background-color: gray;
   text-align: center;
@@ -98,19 +97,40 @@ body {
   font-weight: bold;
   flex-grow: 1;
   padding: 5px 0;
-
   border-top-left-radius: 4px;
   border-top-right-radius: 4px;
 }
 
 
-.table-cell:not(:first-child) {
+.input-cell:not(:first-child) {
   margin-left: -1px;
 }
 
 .table-row {
   display: flex;
   flex-direction: row;
+}
+
+.dialog-header {
+  text-align: center;
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+code {
+  background-color: lightgray;
+  border-radius: 4px;
+  padding: 3px;
+  font-size: 80%;
+  display: inline;
+  vertical-align: middle;
+}
+
+.input-description {
+  font-size: 10pt;
+  margin-top: 3px;
+  margin-bottom: 3px;
+  text-align: justify;
 }
 
 .table-row:last-child {
