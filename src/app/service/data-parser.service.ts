@@ -6,7 +6,6 @@ import {CONSTANTS} from "../constants";
 import {Occurrence} from "../model/Occurrence";
 import {DataCounterNew} from "../model/DataCounterNew";
 import {SetMethods} from "../util/SetMethods";
-import {NestedOccurrence} from "../model/NestedOccurrence";
 import {FileUpload} from "../model/FileUpload";
 import {ParamFile} from "../model/ParamFile";
 import {Delimiter} from "../enums/Delimiter";
@@ -117,7 +116,6 @@ export class DataParserService {
     const currSet = trainingSet.has(fileNumber) ? Split.Training : validationSet.has(fileNumber) ? Split.Validation :  testSet.has(fileNumber) ? Split.Test : undefined;
 
     const phaseIndex = this.createPhaseIndex(parsedPhases);
-    const phaseIndex2 = this.createPhaseIndex2(parsedPhases);
 
     const instIndex = this.createInstIndex(parsedInst, parsedPhases[parsedPhases.length - 1].Frame);
     const idleId = CONSTANTS.instrumentMappingInverse(CONSTANTS.idleLabel)!;
@@ -133,7 +131,6 @@ export class DataParserService {
       phaseData: parsedPhases,
       instData: parsedInst,
       phaseIndex: phaseIndex,
-      phaseIndex2: phaseIndex2,
       instIndex: instIndex,
       occIndex: occIndex,
       set: currSet,
@@ -176,49 +173,6 @@ export class DataParserService {
     return result;
   }
 
-  private createPhaseIndex2(phaseAnnot: PhaseAnnotationRow[]): DataCounterNew<string, NestedOccurrence<Set<string>>[]>[] {
-
-    let result: DataCounterNew<string, NestedOccurrence<Set<string>>[]>[] = CONSTANTS.phaseMapping.domain().map((phaseId: string) => ({
-      object: phaseId,
-      value: []
-    }))
-
-    let startFrame = -1;
-
-    let currFrame = -1;
-    let currPhase = -1;
-
-    phaseAnnot.forEach(phaseAnnotRow => { // for each frame
-      if (phaseAnnotRow.Frame === 0) { // first frame
-        startFrame = phaseAnnotRow.Frame;
-        currPhase = phaseAnnotRow.Phase;
-      }
-
-      if (phaseAnnotRow.Phase !== currPhase) { // phase changed
-        result.find(e => e.object === currPhase + "")!.value.push({
-          start: startFrame,
-          end: currFrame,
-          nestedOccurrences: []
-        })
-
-        startFrame = phaseAnnotRow.Frame;
-        currPhase = phaseAnnotRow.Phase;
-      }
-
-      currFrame = phaseAnnotRow.Frame;
-    })
-
-    // flush remaining data
-    if (startFrame !== null) {
-      result.find(e => e.object === currPhase + "")!.value.push({
-        start: startFrame,
-        end: currFrame,
-        nestedOccurrences: []
-      })
-    }
-
-    return result;
-  }
 
   // dynamic definition of the result object
   private createInstIndex(instAnnot: Record<string, number>[], lastFrameNr: number): Record<string, Occurrence[]> { // constructs occurrence data object
@@ -264,8 +218,8 @@ export class DataParserService {
     return result;
   }
 
-  private createIdleIndex(instAnnot: Record<string, number>[], lastFrameNr: number): NestedOccurrence<string>[] {
-    let result: NestedOccurrence<string>[] = [];
+  private createIdleIndex(instAnnot: Record<string, number>[], lastFrameNr: number): Occurrence[] {
+    let result: Occurrence[] = [];
 
     let startFrame = -1;
     let currFrame = -1;
@@ -283,7 +237,7 @@ export class DataParserService {
         startFrame = currFrame;
       } else if (startFrame !== -1 && currRowNotNull.length > 0) { // instrument now present
 
-        result.push({start: startFrame, end: currFrame - 1, nestedOccurrences: []});
+        result.push({start: startFrame, end: currFrame - 1});
         startFrame = -1;
       }
       prevFrame = currFrame;
@@ -291,15 +245,15 @@ export class DataParserService {
 
     // flush remaining data
     if (startFrame !== -1) {
-      result.push({start: startFrame, end: lastFrameNr, nestedOccurrences: []});
+      result.push({start: startFrame, end: lastFrameNr});
       startFrame = -1;
     }
 
     return result;
   }
 
-  private createInstCooccurrenceIndex(instAnnot: Record<string, number>[], lastFrameNr: number): DataCounterNew<Set<string>, NestedOccurrence<string>[]>[] {
-    let result: DataCounterNew<Set<string>, NestedOccurrence<string>[]>[] = [];
+  private createInstCooccurrenceIndex(instAnnot: Record<string, number>[], lastFrameNr: number): DataCounterNew<Set<string>, Occurrence[]>[] {
+    let result: DataCounterNew<Set<string>, Occurrence[]>[] = [];
 
     instAnnot.forEach(frame => { // for each frame
       let occurrenceSet = new Set<string>();
@@ -316,8 +270,7 @@ export class DataParserService {
         let resultEntry = result.find(e => SetMethods.setEquality(e.object, occurrenceSet));
         let currOcc = {
           start: frame[CONSTANTS.columnNames.frame],
-          end: Math.min(frame[CONSTANTS.columnNames.frame] + CONSTANTS.instFrameStep - 1, lastFrameNr),
-          nestedOccurrences: []
+          end: Math.min(frame[CONSTANTS.columnNames.frame] + CONSTANTS.instFrameStep - 1, lastFrameNr)
         };
 
         if (resultEntry !== undefined) { // occurrence already present in the result object
