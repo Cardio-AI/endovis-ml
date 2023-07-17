@@ -4,6 +4,7 @@ import * as d3 from "d3";
 import {DataSharingService} from "../service/data-sharing.service";
 import {CONSTANTS} from "../constants";
 import {DataForwardService} from "../service/data-forward.service";
+import {Split} from "../enums/Split";
 
 @Component({
   selector: 'app-set-assignment',
@@ -23,10 +24,8 @@ export class SetAssignmentComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    console.log('SET-ASSIGNMENT CREATED');
-
     this.localDatasetCopy = this.dataForwardService.dataset;
-    this.dataSharingService.updateDataset(this.localDatasetCopy.filter(s => s.set !== 'unassigned'))
+    this.dataSharingService.updateDataset(this.localDatasetCopy.filter(s => s.set))
 
     d3.select('#reset-selection').on('click', e => {
       this.assignData();
@@ -62,39 +61,6 @@ export class SetAssignmentComponent implements OnInit {
       this.dataSharingService.updateDataset(this.localDatasetCopy.filter(s => s.set !== 'unassigned'));
       this.dataSharingService.updateSelection([]);
     });
-
-    // this.dataSharingService.dataset$.subscribe(dataset => {
-    //   this.dataset = dataset;
-    //   // d3.select('.all-data .dataset-col-content')
-    //   //   .selectAll('.all-data-item')
-    //   //   .data(dataset)
-    //   //   .join(
-    //   //     enter => {
-    //   //       let mainDiv = enter.append('div')
-    //   //         // .attr('draggable', true)
-    //   //         // .attr('ondragstart', 'drag(event)')
-    //   //         .style('background-color', '#ffffd1')
-    //   //         .style('border', '1px solid #808240');
-    //   //       mainDiv.append('div')
-    //   //         .style('font-size', '10pt')
-    //   //         .text(d => `video${d.spNr}-phase.txt`);
-    //   //       mainDiv.append('div')
-    //   //         .style('font-size', '8pt')
-    //   //         .text(d => `${d.duration} frames`);
-    //   //
-    //   //       // @ts-ignore
-    //   //       mainDiv.call(d3.drag().on('end', (e,d) => {
-    //   //         console.log(e.x)
-    //   //         console.log(e.y)
-    //   //         // @ts-ignore
-    //   //         console.log(d3.select('.dataset-column.train'))
-    //   //       }));
-    //   //       mainDiv.on('mouseover', function () { d3.select(this).style('opacity', 0.5) })
-    //   //         .on('mouseout', function () { d3.select(this).style('opacity', 1) })
-    //   //       return mainDiv;
-    //   //     }
-    //   //   )
-    // })
   }
 
   dragstart(e: DragEvent, sp: SurgeryData) {
@@ -120,8 +86,10 @@ export class SetAssignmentComponent implements OnInit {
 
   private assignData() {
     this.localDatasetCopy.forEach(sp => {
-      sp.set = CONSTANTS.datasets.filter(d => d !== 'test').find(set => CONSTANTS.splits[this.selectedSplit][set].includes(sp.spNr)) || (CONSTANTS.testSplit.includes(sp.spNr) ? 'test' : 'unassigned');
-    })
+      sp.set = this.dataForwardService.crossValSplits[this.selectedSplit][Split.Training].has(sp.spNr) ?
+        Split.Training : this.dataForwardService.crossValSplits[this.selectedSplit][Split.Validation].has(sp.spNr) ?
+          Split.Validation : this.dataForwardService.testSet.has(sp.spNr) ? Split.Test : undefined;
+    });
     this.localDatasetCopy = [...this.localDatasetCopy]; // necessary for angular to detect changes
   }
 

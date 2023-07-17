@@ -1,6 +1,7 @@
 import * as d3 from 'd3';
 import {BaseType} from 'd3';
 
+// TODO: convert to service
 export class WordWrap {
   public static wrap(selection: d3.Selection<SVGTextElement, string, BaseType, unknown>, scale: d3.ScaleBand<string>, yPadding?: number) {
     selection.each((d, i, nodes) => { // for each text element

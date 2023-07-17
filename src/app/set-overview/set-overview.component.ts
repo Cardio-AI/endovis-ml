@@ -1,12 +1,8 @@
 import {Component, OnInit} from '@angular/core';
 import {SurgeryData} from "../model/SurgeryData";
-import {Observable} from "rxjs";
 import {DataSharingService} from "../service/data-sharing.service";
 import * as d3 from 'd3';
-import {BaseType, PieArcDatum} from 'd3';
-import {SetDuration} from "../model/SetDuration";
 import {CONSTANTS} from "../constants";
-import {SetFiles} from "../model/SetFiles";
 import {DataCounterNew} from "../model/DataCounterNew";
 import {Occurrence} from "../model/Occurrence";
 import {InstrumentSelectionService} from "../instrument-selection.service";
@@ -362,7 +358,11 @@ export class SetOverviewComponent implements OnInit {
         .attr('height', d => ySecondaryChartScale(0) - ySecondaryChartScale(d.duration))
         .attr('fill', d => {
           if (this.localSelectionCopy.length > 0 && this.localSelectionCopy.map(e => e.object).includes(d.spNr) || this.localSelectionCopy.length === 0) {
-            return CONSTANTS.datasetColors(d.set);
+            if(d.set) {
+              return CONSTANTS.datasetColors(d.set);
+            } else {
+              throw new Error(`Surgery ${d.spNr} is not assigned to any set`)
+            }
           } else {
             return 'lightgray';
           }

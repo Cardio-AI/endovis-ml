@@ -83,11 +83,19 @@ export class UploadComponent implements OnInit {
     const instLabelsArray = this.dataParserService.splitString(this.instLabels);
 
     let dataset = fileMatches.map(([phaseFile, instFile]) => {
-      return this.dataParserService.parseData(phaseFile, instFile, this.phaseId, this.delimiter, instLabelsArray);
+      return this.dataParserService.parseData(phaseFile, instFile, this.phaseId, this.delimiter, new Set(this.crossValSplit[0][0]), new Set(this.crossValSplit[0][1]), new Set(this.testSet));
     });
 
     // go to train-val
     this.dataForwardService.dataset = dataset;
+    this.dataForwardService.crossValSplits = this.crossValSplit.map((split, i) => {
+      return {
+        train: new Set(split[0]),
+        validation: new Set(split[1]),
+      }
+    });
+
+    this.dataForwardService.testSet = new Set(this.testSet);
 
     this.router.navigate(['/train-test']);
   }
