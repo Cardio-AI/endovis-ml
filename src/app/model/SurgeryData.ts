@@ -11,6 +11,6 @@ export interface SurgeryData {
   phaseIndex2: DataCounterNew<string, Occurrence[]>[];
   instIndex: Record<string, Occurrence[]>; // TODO: use DataCounterNew instead?
   occIndex: DataCounterNew<Set<string>, Occurrence[]>[]
-  set: string;
+  set: string | undefined;
   duration: number; // TODO: get length of phaseData or instData?
 }

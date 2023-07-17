@@ -11,8 +11,8 @@ import {WordWrap} from "../util/WordWrap";
 import {DataCounterNew} from "../model/DataCounterNew";
 import {ScaleData} from "../model/ScaleData";
 import {DataCounterSelection} from "../model/DataCounterSelection";
-import {PhaseSelectionService} from "../service/phase-selection.service";
 import {InstrumentSelectionService} from "../instrument-selection.service";
+import {PhaseSelectionService} from "../service/phase-selection.service";
 
 @Component({
   selector: 'app-graph-view',
@@ -1288,9 +1288,16 @@ export class GraphViewComponent implements OnInit {
                     let resultEntry = result.find((e => e.object === phaseId));
 
                     if (resultEntry === undefined) {
+
+
                       let newValue: Record<string, string | number> = {instId: instId};
                       CONSTANTS.datasets.forEach(d => newValue[d] = 0);
-                      newValue[spObj.set] = instOverlapEnd - instOverlapStart + 1;
+
+                      if(spObj.set) {
+                        newValue[spObj.set] = instOverlapEnd - instOverlapStart + 1;
+                      } else {
+                        throw new Error(`Surgery ${spObj.spNr} is not assigned to any set`)
+                      }
 
                       result.push({object: phaseId, value: [newValue]});
                     } else {
@@ -1299,7 +1306,12 @@ export class GraphViewComponent implements OnInit {
                       if (instEntry === undefined) {
                         let newValue: Record<string, string | number> = {instId: instId};
                         CONSTANTS.datasets.forEach(d => newValue[d] = 0);
-                        newValue[spObj.set] = instOverlapEnd - instOverlapStart + 1;
+
+                        if(spObj.set) {
+                          newValue[spObj.set] = instOverlapEnd - instOverlapStart + 1;
+                        } else {
+                          throw new Error(`Surgery ${spObj.spNr} is not assigned to any set`)
+                        }
 
                         resultEntry.value.push(newValue)
                       } else {
@@ -1337,7 +1349,12 @@ export class GraphViewComponent implements OnInit {
                 if (resultEntry === undefined) {
                   let newValue: Record<string, string | number> = {instId: instId};
                   CONSTANTS.datasets.forEach(d => newValue[d] = 0);
-                  newValue[sp.set] = overlapEnd - overlapStart + 1;
+
+                  if(sp.set) {
+                    newValue[sp.set] = overlapEnd - overlapStart + 1;
+                  } else {
+                    throw new Error(`Surgery ${sp.spNr} is not assigned to any set`)
+                  }
 
                   result.push({object: phaseId, value: [newValue]});
                 } else {
@@ -1346,7 +1363,12 @@ export class GraphViewComponent implements OnInit {
                   if (instEntry === undefined) {
                     let newValue: Record<string, string | number> = {instId: instId};
                     CONSTANTS.datasets.forEach(d => newValue[d] = 0);
-                    newValue[sp.set] = overlapEnd - overlapStart + 1;
+
+                    if(sp.set) {
+                      newValue[sp.set] = overlapEnd - overlapStart + 1;
+                    } else {
+                      throw new Error(`Surgery ${sp.spNr} is not assigned to any set`)
+                    }
 
                     resultEntry.value.push(newValue)
                   } else {

@@ -1,9 +1,7 @@
-import { Injectable } from '@angular/core';
+import {Injectable} from '@angular/core';
 import {Subject} from "rxjs";
-import {SurgeryData} from "../model/SurgeryData";
 import {DataCounterNew} from "../model/DataCounterNew";
 import {Occurrence} from "../model/Occurrence";
-import {DataCounterSelection} from "../model/DataCounterSelection";
 
 @Injectable({
   providedIn: 'root'

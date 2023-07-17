@@ -1,3 +1,5 @@
+
+// TODO: convert to service
 export class SetMethods {
   public static setEquality(set1: Set<string>, set2: Set<string>): boolean {
     return set1.size === set2.size &&
