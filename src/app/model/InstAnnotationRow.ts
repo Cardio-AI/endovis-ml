@@ -1,4 +1,4 @@
 export interface InstAnnotationRow {
-  frame: number;
-  [key: string]: number;
+  Frame: number;
+  [inst: string]: number;
 }
