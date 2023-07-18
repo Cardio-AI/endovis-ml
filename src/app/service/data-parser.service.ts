@@ -10,6 +10,8 @@ import {FileUpload} from "../model/FileUpload";
 import {ParamFile} from "../model/ParamFile";
 import {Delimiter} from "../enums/Delimiter";
 import {Split} from "../enums/Split";
+import {InstAnnotationRow} from "../model/InstAnnotationRow";
+import {AnnotationRow} from "../model/AnnotationRow";
 
 
 @Injectable({
@@ -74,7 +76,7 @@ export class DataParserService {
     return matches;
   }
 
-  parseData(phaseFile: FileUpload<string>, instFile: FileUpload<string>, phaseId: string, delimiter: Delimiter, trainingSet: Set<number>, validationSet: Set<number>, testSet:Set<number>): SurgeryData {
+  parseData(phaseFile: FileUpload<string>, instFile: FileUpload<string>, phaseId: string, delimiter: Delimiter, instLabels:string[], trainingSet: Set<number>, validationSet: Set<number>, testSet:Set<number>): SurgeryData {
     const surgeryName: string = this.filenameToSurgeryName(phaseFile.name, phaseId);
     const fileNumber: number = this.surgeryNameToSurgeryId(surgeryName);
 
@@ -82,7 +84,7 @@ export class DataParserService {
 
     // parse phase annotations
     const parsedPhases: PhaseAnnotationRow[] = d3.dsvFormat(delimiterValue)
-      .parse(phaseFile.content, (row: d3.DSVRaw<PhaseAnnotationRow>, i: number): PhaseAnnotationRow => {
+      .parse(phaseFile.content, (row: d3.DSVRowString<keyof PhaseAnnotationRow>, i: number): PhaseAnnotationRow => {
         if (!row.Frame || !row.Phase || isNaN(parseInt(row.Frame)) || isNaN(parseInt(row.Phase))) {
           throw new Error(`Invalid value in file ${phaseFile.name} at line ${i}`)
         }
@@ -97,11 +99,16 @@ export class DataParserService {
 
     // parse instrument annotations
     const parsedInst = d3.dsvFormat(delimiterValue)
-      .parse(instFile.content, (row: d3.DSVRaw<Record<string, number>>, i: number) => {
+      .parse(instFile.content, (row: d3.DSVRowString<"Frame" | string>, i: number) => {
+        let frame = row['Frame'];
 
-        let result: Record<string, number> = {};
+        if (!frame || isNaN(parseInt(frame))) {
+          throw new Error(`Invalid value in file ${phaseFile.name} at line ${i}`)
+        }
 
-        Object.keys(row).forEach((key: string) => {
+        let result: InstAnnotationRow = {Frame: parseInt(frame)};
+
+        instLabels.forEach((key: string) => {
           let value = row[key];
 
           if (!value || isNaN(parseInt(value))) {
@@ -109,19 +116,21 @@ export class DataParserService {
           }
 
           result[key] = parseInt(value);
-        })
+        });
+
         return result;
       });
 
+    // initial assignment to sets
     const currSet = trainingSet.has(fileNumber) ?
       Split.Training : validationSet.has(fileNumber) ?
         Split.Validation :  testSet.has(fileNumber) ? Split.Test : undefined;
 
     const phaseIndex = this.createPhaseIndex(parsedPhases);
 
-    const instIndex = this.createInstIndex(parsedInst, parsedPhases[parsedPhases.length - 1].Frame);
+    const instIndex = this.createInstIndex(parsedInst);
     const idleId = CONSTANTS.instrumentMappingInverse(CONSTANTS.idleLabel)!;
-    const idleIndex = this.createIdleIndex(parsedInst, parsedPhases[parsedPhases.length - 1].Frame);
+    const idleIndex = this.createIdleIndex(parsedInst);
     instIndex[idleId] = idleIndex;
 
     const occIndex = this.createInstOccurrenceIndex(parsedInst, parsedPhases[parsedPhases.length - 1].Frame);
@@ -131,7 +140,8 @@ export class DataParserService {
       spNr: fileNumber,
       spName: surgeryName,
       phaseData: parsedPhases,
-      instData: parsedInst,
+      // instData: parsedInst,
+      parsedData: this.unifyFiles(parsedPhases, parsedInst, instLabels),
       phaseIndex: phaseIndex,
       instIndex: instIndex,
       occIndex: occIndex,
@@ -148,27 +158,24 @@ export class DataParserService {
     CONSTANTS.phaseMapping.domain().forEach((phaseId: string) => result[phaseId] = [])
 
     let startFrame = -1;
-
-    let currFrame = -1;
     let currPhase = -1;
+    let prevFrame = -1;
 
     phaseAnnot.forEach(phaseAnnotRow => { // for each frame
       if (phaseAnnotRow.Frame === 0) { // first frame
         startFrame = phaseAnnotRow.Frame;
         currPhase = phaseAnnotRow.Phase;
-      }
-
-      if (phaseAnnotRow.Phase !== currPhase) { // phase changed
-        result[currPhase].push({start: startFrame, end: currFrame})
+      } else if (phaseAnnotRow.Phase !== currPhase) { // phase changed
+        result[currPhase].push({start: startFrame, end: prevFrame})
         startFrame = phaseAnnotRow.Frame;
         currPhase = phaseAnnotRow.Phase;
       }
-      currFrame = phaseAnnotRow.Frame;
+      prevFrame = phaseAnnotRow.Frame;
     })
 
     // flush remaining data
     if (startFrame !== null) {
-      result[currPhase].push({start: startFrame, end: currFrame});
+      result[currPhase].push({start: startFrame, end: prevFrame});
     }
 
     return result;
@@ -176,7 +183,7 @@ export class DataParserService {
 
 
   // dynamic definition of the result object
-  private createInstIndex(instAnnot: Record<string, number>[], lastFrameNr: number): Record<string, Occurrence[]> { // constructs occurrence data object
+  private createInstIndex(instAnnot: Record<string, number>[]): Record<string, Occurrence[]> { // constructs occurrence data object
     // initialize result object
     let result: Record<string, Occurrence[]> = {}
 
@@ -205,14 +212,14 @@ export class DataParserService {
 
         // flush remaining data
         if (startFrame !== -1) {
-          result[instId].push({start: startFrame, end: lastFrameNr}); // TODO: is lastFrameNr necessary?
+          result[instId].push({start: startFrame, end: prevFrame});
         }
       }
     });
     return result;
   }
 
-  private createIdleIndex(instAnnot: Record<string, number>[], lastFrameNr: number): Occurrence[] {
+  private createIdleIndex(instAnnot: Record<string, number>[]): Occurrence[] {
     let result: Occurrence[] = [];
 
     let startFrame = -1;
@@ -236,10 +243,9 @@ export class DataParserService {
 
     // flush remaining data
     if (startFrame !== -1) {
-      result.push({start: startFrame, end: lastFrameNr}); // TODO: is lastFrameNr necessary?
+      result.push({start: startFrame, end: prevFrame}); // TODO: is lastFrameNr necessary?
     }
 
-    console.log(result)
     return result;
   }
 
@@ -285,6 +291,26 @@ export class DataParserService {
       prevFrame = currFrame;
     });
 
+    return result;
+  }
+
+  private unifyFiles(phaseData: PhaseAnnotationRow[], instData: InstAnnotationRow[], instLabels: string[]) {
+    let result: AnnotationRow[]= [];
+
+    phaseData.forEach(phaseRow => { // for each row
+      let unifiedRow: AnnotationRow = {Frame: phaseRow.Frame, Phase: phaseRow.Phase};
+
+      let instRow = instData.find(instRow => instRow.Frame === phaseRow.Frame);
+
+      if (instRow) {
+        for (let label of instLabels) {
+          unifiedRow[label] = instRow[label];
+        }
+        result.push(unifiedRow);
+      } else {
+        console.log(`Skipping unannotated row`)
+      }
+    });
     return result;
   }
 

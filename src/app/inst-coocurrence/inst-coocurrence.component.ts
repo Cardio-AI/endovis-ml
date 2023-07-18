@@ -90,18 +90,18 @@ export class InstCoocurrenceComponent implements OnInit {
 
     // get all necessary data
     const allOccurrences = this.globalSelection.length > 0 ? this.globalSelection : this.getAllOccurrences(); // take global selection if present, default dataset otherwise
-    const coocurrences = allOccurrences.filter(e => e.object.size > 1); // represent nodes in the view
-    const instOccurrences = this.occurrenceToBarchartData(allOccurrences);
+    const instCooccurrences = allOccurrences.filter(e => e.object.size > 1); // represent nodes in the view
+    const instSingleOccurrences = this.occurrenceToBarchartData(allOccurrences);
 
-    const dataMaxVal = d3.max(instOccurrences.flatMap(e => e.value.map(d => d.value))) || 0;
+    const dataMaxVal = d3.max(instSingleOccurrences.flatMap(e => e.value.map(d => d.value))) || 0;
 
-    const angle = Math.PI * 2 / instOccurrences.length;
+    const angle = Math.PI * 2 / instSingleOccurrences.length;
 
     d3.select('.instrument-cooccurrence-chart')
       .attr('transform', `translate(${this.svgWidth/ 2}, ${this.svgHeight / 2})`);
 
-    let instCooccurrNodes = coocurrences.map((e: InstCooccurrenceNode<Set<string>, DataCounterNew<string, number>[]>) => {
-      let coord = this.instSetToCentroidCoord(e.object, instOccurrences, angle, radius);
+    let instCooccurrNodes = instCooccurrences.map((e: InstCooccurrenceNode<Set<string>, DataCounterNew<string, number>[]>) => {
+      let coord = this.instSetToCentroidCoord(e.object, instSingleOccurrences, angle, radius);
       e.x = coord[0];
       e.y = coord[1];
       return e;
@@ -110,7 +110,7 @@ export class InstCoocurrenceComponent implements OnInit {
     // radial lines
     d3.select('.instrument-nodes-g')
       .selectAll('.instrument-line')
-      .data(instOccurrences)
+      .data(instSingleOccurrences)
       .join(
         enter => enter.append('line')
           .attr('class', 'instrument-line')
@@ -144,7 +144,7 @@ export class InstCoocurrenceComponent implements OnInit {
 
     let setBarXScale: d3.ScaleLinear<number, number>[];
     if(this.individualScales) {
-      const individualInstVal = instOccurrences.map(e => d3.max(e.value.map(d => d.value)) || 1);
+      const individualInstVal = instSingleOccurrences.map(e => d3.max(e.value.map(d => d.value)) || 1);
 
       setBarXScale = individualInstVal.map(v => d3.scaleLinear()
         .domain([0, v])
@@ -157,14 +157,14 @@ export class InstCoocurrenceComponent implements OnInit {
 
     let instG = d3.select('.instrument-nodes-g')
       .selectAll<SVGSVGElement, DataCounterNew<string, DataCounterNew<string, number>[]>>('.instrument-node-g')
-      .data(instOccurrences, k => k.object)
+      .data(instSingleOccurrences, k => k.object)
       .join(
         enter => enter.append('g')
           .attr('class', 'instrument-node-g')
-          .attr('transform', (d, i) => `translate(${Math.round(this.instIdxToXCoord(this.findIdx(instOccurrences, d.object), angle, radius))} ${Math.round(this.instIdxToYCoord(this.findIdx(instOccurrences, d.object), angle, radius))}) rotate(${angle * this.findIdx(instOccurrences, d.object) * 180 / Math.PI})`)
+          .attr('transform', (d, i) => `translate(${Math.round(this.instIdxToXCoord(this.findIdx(instSingleOccurrences, d.object), angle, radius))} ${Math.round(this.instIdxToYCoord(this.findIdx(instSingleOccurrences, d.object), angle, radius))}) rotate(${angle * this.findIdx(instSingleOccurrences, d.object) * 180 / Math.PI})`)
       ).transition().duration(1000)
       .attr('opacity', d => this.highlightOpacity(d.value))
-      .attr('transform', (d, i) => `translate(${Math.round(this.instIdxToXCoord(this.findIdx(instOccurrences, d.object), angle, radius))} ${Math.round(this.instIdxToYCoord(this.findIdx(instOccurrences, d.object), angle, radius))}) rotate(${angle * this.findIdx(instOccurrences, d.object) * 180 / Math.PI})`);
+      .attr('transform', (d, i) => `translate(${Math.round(this.instIdxToXCoord(this.findIdx(instSingleOccurrences, d.object), angle, radius))} ${Math.round(this.instIdxToYCoord(this.findIdx(instSingleOccurrences, d.object), angle, radius))}) rotate(${angle * this.findIdx(instSingleOccurrences, d.object) * 180 / Math.PI})`);
 
     instG.each((pData, i, nodes) => {
       // d3.select(nodes[i])
@@ -208,8 +208,8 @@ export class InstCoocurrenceComponent implements OnInit {
             .attr('y', d => (setBarYScale(d.object) || 0) - barChartHeight)
         ).transition().duration(1000)
         .attr('fill', d => this.selectedCooccurrences.length > 0 ? 'lightgray' : CONSTANTS.datasetColors(d.object))
-        .attr('x', d => this.individualScales ? -1 / 2 * setBarXScale[this.findIdx(instOccurrences, pData.object)](d.value) : -1 / 2 * setBarXScale[0](d.value))
-        .attr('width', d => this.individualScales ? setBarXScale[this.findIdx(instOccurrences, pData.object)](d.value) : setBarXScale[0](d.value));
+        .attr('x', d => this.individualScales ? -1 / 2 * setBarXScale[this.findIdx(instSingleOccurrences, pData.object)](d.value) : -1 / 2 * setBarXScale[0](d.value))
+        .attr('width', d => this.individualScales ? setBarXScale[this.findIdx(instSingleOccurrences, pData.object)](d.value) : setBarXScale[0](d.value));
 
       // draw bar chart values
       d3.select(nodes[i])
@@ -240,9 +240,9 @@ export class InstCoocurrenceComponent implements OnInit {
       .join(
         enter => enter.append('g')
           .attr('class', 'instrument-selected-node-g')
-          .attr('transform', (d, i) => `translate(${Math.round(this.instIdxToXCoord(this.findIdx(instOccurrences, d.object), angle, radius))} ${Math.round(this.instIdxToYCoord(this.findIdx(instOccurrences, d.object), angle, radius))}) rotate(${angle * this.findIdx(instOccurrences, d.object) * 180 / Math.PI})`)
+          .attr('transform', (d, i) => `translate(${Math.round(this.instIdxToXCoord(this.findIdx(instSingleOccurrences, d.object), angle, radius))} ${Math.round(this.instIdxToYCoord(this.findIdx(instSingleOccurrences, d.object), angle, radius))}) rotate(${angle * this.findIdx(instSingleOccurrences, d.object) * 180 / Math.PI})`)
       ).transition().duration(1000)
-      .attr('transform', (d, i) => `translate(${Math.round(this.instIdxToXCoord(this.findIdx(instOccurrences, d.object), angle, radius))} ${Math.round(this.instIdxToYCoord(this.findIdx(instOccurrences, d.object), angle, radius))}) rotate(${angle * this.findIdx(instOccurrences, d.object) * 180 / Math.PI})`);
+      .attr('transform', (d, i) => `translate(${Math.round(this.instIdxToXCoord(this.findIdx(instSingleOccurrences, d.object), angle, radius))} ${Math.round(this.instIdxToYCoord(this.findIdx(instSingleOccurrences, d.object), angle, radius))}) rotate(${angle * this.findIdx(instSingleOccurrences, d.object) * 180 / Math.PI})`);
 
     selectedInstG.each((pData, i, nodes) => {
       // draw bar chart
@@ -257,15 +257,15 @@ export class InstCoocurrenceComponent implements OnInit {
             .attr('x', 0)
             .attr('y', d => (setBarYScale(d.object) || 0) - barChartHeight)
         ).transition().duration(1000)
-        .attr('x', d => this.individualScales ? -1 / 2 * setBarXScale[this.findIdx(instOccurrences, pData.object)](d.value) : -1 / 2 * setBarXScale[0](d.value))
-        .attr('width', d => this.individualScales ? setBarXScale[this.findIdx(instOccurrences, pData.object)](d.value) : setBarXScale[0](d.value));
+        .attr('x', d => this.individualScales ? -1 / 2 * setBarXScale[this.findIdx(instSingleOccurrences, pData.object)](d.value) : -1 / 2 * setBarXScale[0](d.value))
+        .attr('width', d => this.individualScales ? setBarXScale[this.findIdx(instSingleOccurrences, pData.object)](d.value) : setBarXScale[0](d.value));
     });
 
     const labelMargin = 5;
 
     d3.select('.instrument-labels-g')
       .selectAll<SVGSVGElement, DataCounter<DataCounter<number>[]>>('.instrument-label')
-      .data(instOccurrences, k => k.object)
+      .data(instSingleOccurrences, k => k.object)
       .join(
         enter => enter.append('text')
           .attr('class', 'instrument-label')
@@ -345,7 +345,7 @@ export class InstCoocurrenceComponent implements OnInit {
       .tick(100)
       .stop();
 
-    this.updateCircles(instCooccurrNodes, instOccurrences, angle, radius, nodeRadius);
+    this.updateCircles(instCooccurrNodes, instSingleOccurrences, angle, radius, nodeRadius);
 
     // d3.select('.instrument-nodes-g')
     //   .selectAll('.instrument-text')
@@ -363,41 +363,12 @@ export class InstCoocurrenceComponent implements OnInit {
     //   );
   }
 
-  private calcBarChartData(): DataCounter<DataCounter<number>[]>[] {
-    let result: DataCounter<DataCounter<number>[]>[] = [];
-
-    let iterObj = CONSTANTS.instrumentMapping.domain();
-
-    // remove idle node
-    if(!this.viewIdle) {
-      iterObj = iterObj.filter(e => e !== CONSTANTS.instrumentMappingInverse('Idle'));
-    }
-
-    iterObj.forEach(id => { // for each instrument
-      let dataCounter: DataCounter<number>[] = [];
-
-      let instPresent = false;
-      CONSTANTS.datasets.forEach(set => { // for each dataset
-        const data = this.localDatasetCopy.filter(e => e.set === set);
-        let counter = 0;
-        data.forEach(sp => { // for each surgery
-          counter += d3.sum(sp.instIndex[id].map((e: Occurrence) => e.end - e.start + 1))
-        });
-        if(counter > 0) {
-          instPresent = true;
-        }
-        dataCounter.push({object: set, value: counter});
-      });
-
-      if(this.viewUnused || !this.viewUnused && instPresent) {
-        result.push({object: id, value: dataCounter});
-      }
-    });
-    return result;
-  }
-
-  // TODO: why not use instIndex?
-  private occurrenceToBarchartData(cooccurrData: DataCounterNew<Set<string>, DataCounterNew<string, number>[]>[]): DataCounter<DataCounter<number>[]>[] {
+  /**
+   * Convert occurrence data to barchart data format
+   * @param occurData
+   * @private
+   */
+  private occurrenceToBarchartData(occurData: DataCounterNew<Set<string>, DataCounterNew<string, number>[]>[]): DataCounter<DataCounter<number>[]>[] {
     let result: DataCounter<DataCounter<number>[]>[] = [];
 
     let iterObj = CONSTANTS.instrumentMapping.domain();
@@ -411,7 +382,7 @@ export class InstCoocurrenceComponent implements OnInit {
       let dataCounter: DataCounter<number>[] = [];
 
       CONSTANTS.datasets.forEach(set => { // for each dataset
-        const data = cooccurrData.filter(e => e.object.has(instId)); // get all co-occurrences that contain this instruments
+        const data = occurData.filter(e => e.object.has(instId)); // get all co-occurrences that contain this instruments
 
         let counter = 0;
         data.forEach(cooccurr => { // for each set
@@ -428,52 +399,42 @@ export class InstCoocurrenceComponent implements OnInit {
   }
 
   /**
-   * Convert data to the format that is used in this view
+   * Convert occurrence data to the format that is used in this view
    * @private
    */
   private getAllOccurrences() {
     let result: DataCounterSelection<Set<string>, DataCounterNew<string, number>[]>[] = [];
 
-    let idCounter = 0;
     this.localDatasetCopy.forEach(sp => { // for each surgery
-      sp.occIndex.forEach(cooccurr => { // for each co-occurrence
-        let resEntry = result.find(e => SetMethods.setEquality(e.object, cooccurr.object));
-        if (resEntry !== undefined) {
+      sp.occIndex.forEach(instOccur => { // for each co-occurrence
+        let resEntry = result.find(e => SetMethods.setEquality(e.object, instOccur.object));
+        if (resEntry !== undefined) { // occurrence already present in the result object
           let setEntry = resEntry.value.find(e => e.object === sp.set)!;
-          cooccurr.value.forEach(occ => {
-            setEntry.value += occ.end - occ.start + 1;
+
+          // calculate the number of frames
+          instOccur.value.forEach(occ => { // for each occurrence
+            setEntry.value += sp.parsedData.filter(row => row.Frame >= occ.start && row.Frame <= occ.end).length;
           });
 
-          resEntry.originalData.push({object: sp.spNr, value: cooccurr.value});
-        } else {
+          // attach original frames that will be used for selections
+          resEntry.originalData.push({object: sp.spNr, value: instOccur.value});
+        } else { // add new occurrence to the result object
           let newResEntry: DataCounterSelection<Set<string>, DataCounterNew<string, number>[]> = {
-            object: cooccurr.object,
+            object: instOccur.object,
             value: CONSTANTS.datasets.map(set => ({object: set, value: 0})),
-            originalData: [{object: sp.spNr, value: cooccurr.value}]
+            originalData: [{object: sp.spNr, value: instOccur.value}]
           }
-          newResEntry.id = idCounter;
-          idCounter++;
 
           let setEntry = newResEntry.value.find(e => e.object === sp.set)!;
-          cooccurr.value.forEach(occ => {
-            setEntry.value += occ.end - occ.start + 1;
+          instOccur.value.forEach(occ => {
+            setEntry.value += sp.parsedData.filter(row => row.Frame >= occ.start && row.Frame <= occ.end).length;
           });
 
           result.push(newResEntry);
         }
       });
-
     });
     return result;
-  }
-
-  private calcPolygonCenter(points: [number, number][]) {
-    let pointsHull = d3.polygonHull(points);
-    if(pointsHull !== null) {
-      return d3.polygonCentroid(pointsHull);
-    } else {
-      return [];
-    }
   }
 
   private findIdx(data: DataCounterNew<string, DataCounterNew<string, number>[]>[], instId: string) {
@@ -542,13 +503,13 @@ export class InstCoocurrenceComponent implements OnInit {
             let overlapEnd = Math.min(occ.end, e.end);
 
             if (overlapStart < overlapEnd) { // intervals overlap?
-              overlapCounter += overlapEnd - overlapStart + 1
+              overlapCounter += spObj.parsedData.filter(row => row.Frame >= overlapStart && row.Frame <= overlapEnd).length;
               overlapOcc.push({start: overlapStart, end: overlapEnd});
             }
           });
 
-          if (overlapCounter > 0) { //
-            if (resEntry === undefined) {
+          if (overlapCounter > 0) {
+            if (resEntry === undefined) { // new selection object
               let newEntry = {
                 object: instOcc.object,
                 value: CONSTANTS.datasets.map(s => ({object: s, value: 0})),
