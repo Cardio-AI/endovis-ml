@@ -12,7 +12,7 @@ export class CONSTANTS {
   // public static instAnnotations = d3.range(1, 9).map(num => `/data/miccai/inst/Prokto${(num)}.csv`);
   // public static instAnnotations = d3.range(1, 81).map(num => `/sample_dataset/video${("0" + num).slice(-2)}_tool.csv`);
 
-  public static instFrameStep = 25;
+  // public static instFrameStep = 25;
 
   public static datasetColors = d3.scaleOrdinal<string, string>()
     .domain(CONSTANTS.datasets)

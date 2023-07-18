@@ -86,6 +86,8 @@ export class UploadComponent implements OnInit {
       return this.dataParserService.parseData(phaseFile, instFile, this.phaseId, this.delimiter, new Set(this.crossValSplit[0][0]), new Set(this.crossValSplit[0][1]), new Set(this.testSet));
     });
 
+    console.log(dataset)
+
     // go to train-val
     this.dataForwardService.dataset = dataset;
     this.dataForwardService.crossValSplits = this.crossValSplit.map((split, i) => {
