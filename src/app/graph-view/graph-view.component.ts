@@ -1030,12 +1030,11 @@ export class GraphViewComponent implements OnInit {
       let spObj = this.localDatasetCopy.find(s => s.spNr === sp.object)!;
 
       sp.value.forEach(occ => { // for each occurrence
-        let startIdx = spObj.phaseData.findIndex(f => f.Frame === occ.start)!;
+        let startIdx = spObj.parsedData.findIndex(f => f.Frame === occ.start)!;
+        let endIdx = spObj.parsedData.findIndex(f => f.Frame === occ.end)!;
 
-        let endIdx = spObj.phaseData.findIndex(f => f.Frame === occ.end)!;
-
-        let currPhase = spObj.phaseData[endIdx]?.Phase;
-        let nextPhase = spObj.phaseData[endIdx + 1]?.Phase;
+        let currPhase = spObj.parsedData[endIdx]?.Phase;
+        let nextPhase = spObj.parsedData[endIdx + 1]?.Phase;
 
         if(startIdx === 0) { // start transition
           let resultEntry = result.find(t => t.object.start === '8888' && t.object.end === currPhase + "");
@@ -1061,7 +1060,7 @@ export class GraphViewComponent implements OnInit {
           if(nextPhase === undefined) {
             nextPhase = 9999;
           } else {
-            let nextFrame = spObj.phaseData[endIdx + 1]?.Frame;
+            let nextFrame = spObj.parsedData[endIdx + 1]?.Frame;
             nextOccurr = sp.value.find(t => t.start === nextFrame);
           }
 
@@ -1096,111 +1095,120 @@ export class GraphViewComponent implements OnInit {
    * @private
    */
   private selectionToPhaseOccurrences(selection: DataCounterNew<number, Occurrence[]>[]): DataCounterSelection<string, DataCounterNew<string, number>[]>[] {
+    console.log(selection)
     let result: DataCounterSelection<string, DataCounterNew<string, number>[]>[] = [];
 
-    selection.forEach(sp => {
-      let spObj = this.localDatasetCopy.find(e => e.spNr === sp.object)!;
+    selection.forEach(spSelection => { // for each selected surgery
+      let spObj = this.localDatasetCopy.find(e => e.spNr === spSelection.object)!;
 
-      sp.value.forEach(occ => { // for each occurrence of the surgery
+      spSelection.value.forEach(selOcc => { // for each occurrence of the selected surgery
 
-        CONSTANTS.phaseMapping.domain().forEach(phaseId => {
+        CONSTANTS.phaseMapping.domain().forEach(phaseId => { // for each phase
+          let overlapOcc: Occurrence[] = [];
+          let overlapCounter = 0;
 
-          spObj.phaseIndex[phaseId].forEach(e => {
-            let overlapStart = Math.max(occ.start, e.start);
-            let overlapEnd = Math.min(occ.end, e.end);
+          spObj.phaseIndex[phaseId].forEach(phaseOcc => { // for each phase occurrence in the original data
+            let overlapStart = Math.max(selOcc.start, phaseOcc.start);
+            let overlapEnd = Math.min(selOcc.end, phaseOcc.end);
 
-            if (overlapStart < overlapEnd) {
-
-              let resultEntry = result.find((e => e.object === phaseId));
-
-              if (resultEntry === undefined) {
-                let newEntry: DataCounterSelection<string, DataCounterNew<string, number>[]> = {
-                  object: phaseId,
-                  value: CONSTANTS.datasets.map(d => ({object: d, value: 0})),
-                  originalData: []
-                };
-                newEntry.value.find(e => e.object === spObj.set)!.value = overlapEnd - overlapStart + 1;
-                newEntry.originalData.push({object: sp.object, value: [{start: overlapStart, end: overlapEnd}]});
-                result.push(newEntry);
-              } else {
-                resultEntry.value.find(e => e.object === spObj.set)!.value += overlapEnd - overlapStart + 1;
-                let spEntry = resultEntry.originalData.find(s => s.object === sp.object)
-
-                if (spEntry === undefined) {
-                  resultEntry.originalData.push({object: sp.object, value: [{start: overlapStart, end: overlapEnd}]});
-                } else {
-                  spEntry.value.push({start: overlapStart, end: overlapEnd});
-                }
-              }
+            if (overlapStart <= overlapEnd) { // intervals overlap?
+              overlapOcc.push({start: overlapStart, end: overlapEnd});
+              overlapCounter += spObj.parsedData.filter(row => row.Frame >= overlapStart && row.Frame <= overlapEnd).length;
             }
           });
+
+          // store
+          if (overlapCounter > 0) {
+            let resultEntry = result.find((e => e.object === phaseId));
+            if (resultEntry === undefined) { // create new result entry
+              let newEntry = {
+                object: phaseId,
+                value: CONSTANTS.datasets.map(d => ({object: d, value: d === spObj.set ? overlapCounter : 0})),
+                originalData: [{object: spObj.spNr, value: overlapOcc}]
+              }
+
+              result.push(newEntry);
+            } else { // result entry already exists
+              let setEntry = resultEntry.value.find(e => e.object === spObj.set)!;
+              setEntry.value += overlapCounter;
+
+              let spEntry = resultEntry.originalData.find(s => s.object === spSelection.object)
+              if (spEntry === undefined) {
+                resultEntry.originalData.push({object: spObj.spNr, value: overlapOcc});
+              } else {
+                spEntry.value.push(...overlapOcc);
+              }
+            }
+          }
         });
       });
     });
+    console.log(result)
     return result;
   }
 
   private selectionToInstrumentData(selection: DataCounterNew<number, Occurrence[]>[]): DataCounterNew<string, Record<string, string | number>[]>[] {
     let result: DataCounterNew<string, Record<string, string | number>[]>[] = []; // counter per phase
 
-    selection.forEach(sp => {
-      let spObj = this.localDatasetCopy.find(e => e.spNr === sp.object)!;
+    selection.forEach(spSelection => { // for each selected surgery
+      let spObj = this.localDatasetCopy.find(e => e.spNr === spSelection.object)!;
 
-      sp.value.forEach(occ => { // for each occurrence of the surgery
+      spSelection.value.forEach(selOcc => { // for each occurrence of the selected surgery
 
-        CONSTANTS.phaseMapping.domain().forEach(phaseId => {
+        CONSTANTS.phaseMapping.domain().forEach(phaseId => { // for each phase
 
-          let dataObj: DataCounterNew<number, Occurrence[]> = {object: sp.object, value: []};
+          spObj.phaseIndex[phaseId].forEach(phaseOcc => { // for each phase occurrence in the original data
+            let phaseOverlapStart = Math.max(selOcc.start, phaseOcc.start);
+            let phaseOverlapEnd = Math.min(selOcc.end, phaseOcc.end);
 
-          spObj.phaseIndex[phaseId].forEach(e => { // for each phase annotation in the original surgery
-            let overlapStart = Math.max(occ.start, e.start);
-            let overlapEnd = Math.min(occ.end, e.end);
+            if (phaseOverlapStart <= phaseOverlapEnd) { // phase overlap?
+              // dataObj.value.push({start: overlapStart, end: overlapEnd});
 
-            if (overlapStart < overlapEnd) { // phase overlap found
-              dataObj.value.push({start: overlapStart, end: overlapEnd});
+              CONSTANTS.instrumentMapping.domain().forEach(instId => { // for each instrument
+                let instOverlapOcc: Occurrence[] = [];
+                let instOverlapCounter = 0;
 
-              CONSTANTS.instrumentMapping.domain().forEach(instId => {
-                spObj.instIndex[instId].forEach(instOcc => {
-                  let instOverlapStart = Math.max(instOcc.start, overlapStart);
-                  let instOverlapEnd = Math.min(instOcc.end, overlapEnd);
+                spObj.instIndex[instId].forEach(instOcc => { // for each instrument occurrence
+                  let instOverlapStart = Math.max(instOcc.start, phaseOverlapStart);
+                  let instOverlapEnd = Math.min(instOcc.end, phaseOverlapEnd);
 
-                  if (instOverlapStart < instOverlapEnd) { // instrument overlap found
-                    let resultEntry = result.find((e => e.object === phaseId));
+                  if (instOverlapStart <= instOverlapEnd) { // instrument overlap?
+                    instOverlapOcc.push({start: instOverlapStart, end: instOverlapEnd});
+                    instOverlapCounter += spObj.parsedData.filter(row => row.Frame >= instOverlapStart && row.Frame <= instOverlapEnd).length;
+                  }
+                });
 
-                    if (resultEntry === undefined) {
+                // store
+                if (instOverlapCounter > 0) {
+                  let resultEntry = result.find((e => e.object === phaseId));
+                  if (resultEntry === undefined) { // create new result entry
 
+                    let newValue: Record<string, string | number> = {
+                      instId: instId
+                    }
 
-                      let newValue: Record<string, string | number> = {instId: instId};
-                      CONSTANTS.datasets.forEach(d => newValue[d] = 0);
+                    CONSTANTS.datasets.forEach(d => d === spObj.set ? newValue[d] = instOverlapCounter : newValue[d] = 0);
+                    result.push({object: phaseId, value: [newValue]});
+                  } else { // result entry already exists
+                    let instEntry = resultEntry.value.find(i => i['instId'] === instId);
 
-                      if(spObj.set) {
-                        newValue[spObj.set] = instOverlapEnd - instOverlapStart + 1;
-                      } else {
-                        throw new Error(`Surgery ${spObj.spNr} is not assigned to any set`)
+                    if (instEntry === undefined) {
+                      let newValue: Record<string, string | number> = {
+                        instId: instId
                       }
 
-                      result.push({object: phaseId, value: [newValue]});
+                      CONSTANTS.datasets.forEach(d => d === spObj.set ? newValue[d] = instOverlapCounter : newValue[d] = 0);
+
+                      resultEntry.value.push(newValue)
                     } else {
-                      let instEntry = resultEntry.value.find(i => i['instId'] === instId);
-
-                      if (instEntry === undefined) {
-                        let newValue: Record<string, string | number> = {instId: instId};
-                        CONSTANTS.datasets.forEach(d => newValue[d] = 0);
-
-                        if(spObj.set) {
-                          newValue[spObj.set] = instOverlapEnd - instOverlapStart + 1;
-                        } else {
-                          throw new Error(`Surgery ${spObj.spNr} is not assigned to any set`)
-                        }
-
-                        resultEntry.value.push(newValue)
+                      if(spObj.set) {
+                        (instEntry[spObj.set] as number) += instOverlapCounter;
                       } else {
-                        // @ts-ignore
-                        instEntry[spObj.set] += instOverlapEnd - instOverlapStart + 1;
+                        throw new Error(`Surgery ${spObj.spName} is not assigned to any set`)
                       }
                     }
                   }
-                });
+                }
               });
             }
           });
