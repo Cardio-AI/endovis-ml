@@ -213,9 +213,9 @@ export class GraphViewComponent implements OnInit {
       .attr('d', d => {
         let startX = (phaseScale(d.object.start) || 0) + phaseScale.bandwidth() / 2;
         let endX = (phaseScale(d.object.end) || 0) + phaseScale.bandwidth() / 2;
-        if (d.object.start === "8888") {
+        if (d.object.start === "start") {
           startX = 0 - phaseScale.bandwidth() / 2;
-        } else if (d.object.end === '9999') {
+        } else if (d.object.end === 'end') {
           endX = this.svgWidth + phaseScale.bandwidth() / 2;
         }
         return ['M', startX, yGraphCenter, 'A',
@@ -260,10 +260,10 @@ export class GraphViewComponent implements OnInit {
 
         let startX = (phaseScale(currTransition.start) || 0) + phaseScale.bandwidth() / 2;
         let endX = (phaseScale(currTransition.end) || 0) + phaseScale.bandwidth() / 2;
-        if (currTransition.start === "8888") {
+        if (currTransition.start === "start") {
 
           startX = 0 - phaseScale.bandwidth() / 2;
-        } else if (currTransition.end === '9999') {
+        } else if (currTransition.end === 'end') {
           endX = this.svgWidth + phaseScale.bandwidth() / 2;
         }
 
@@ -271,9 +271,9 @@ export class GraphViewComponent implements OnInit {
         let y = Math.round(yGraphCenter - (endX - startX) / 5);
 
         // slightly move top left and top right charts to fit on the screen
-        if (currTransition.start === '8888' && currTransition.end === phaseScale.domain()[0]) { // transition from the start to the first phase
+        if (currTransition.start === 'start' && currTransition.end === phaseScale.domain()[0]) { // transition from the start to the first phase
           x += setTransitionPieRadius;
-        } else if (currTransition.end === '9999' && currTransition.start === phaseScale.domain()[phaseScale.domain().length - 1]) { // transition
+        } else if (currTransition.end === 'end' && currTransition.start === phaseScale.domain()[phaseScale.domain().length - 1]) { // transition
           x -= setTransitionPieRadius;
         }
 
@@ -302,12 +302,9 @@ export class GraphViewComponent implements OnInit {
           const height = 66;
           let [x, y] = d3.pointer(e, d3.select('#graph-view-svg').node());
 
-          let startText = pData.object.start === '8888' ? 'start' : pData.object.start;
-          let endText = pData.object.end === '9999' ? 'end' : pData.object.end;
-
           let label = d3.select('.graph-view-phase-tooltip')
             .select<SVGTSpanElement>('tspan')
-            .text(`${startText} → ${endText}`);
+            .text(`${pData.object.start} → ${pData.object.end}`);
 
           let computedMaxWidth = label.node()!.getComputedTextLength();
 
@@ -1033,11 +1030,11 @@ export class GraphViewComponent implements OnInit {
         let startIdx = spObj.parsedData.findIndex(f => f.Frame === occ.start)!;
         let endIdx = spObj.parsedData.findIndex(f => f.Frame === occ.end)!;
 
-        let currPhase = spObj.parsedData[endIdx]?.Phase;
-        let nextPhase = spObj.parsedData[endIdx + 1]?.Phase;
+        let currPhase = spObj.parsedData[endIdx].Phase.toString();
+        let nextPhase = spObj.parsedData[endIdx + 1]?.Phase.toString();
 
-        if(startIdx === 0) { // start transition
-          let resultEntry = result.find(t => t.object.start === '8888' && t.object.end === currPhase + "");
+        if (startIdx === 0) { // start transition
+          let resultEntry = result.find(t => t.object.start === 'start' && t.object.end === currPhase.toString());
           if (resultEntry !== undefined) { // transition already present in the result object
             resultEntry.value.find(s => s.object === spObj.set)!.value++;
 
@@ -1047,7 +1044,7 @@ export class GraphViewComponent implements OnInit {
             }
           } else {
             result.push({
-              object: {start: "8888", end: currPhase + ""},
+              object: {start: "start", end: currPhase.toString()},
               value: CONSTANTS.datasets.map(d => ({object: d, value: spObj.set === d ? 1 : 0})),
               originalData: [sp]
             });
@@ -1055,37 +1052,29 @@ export class GraphViewComponent implements OnInit {
         }
 
         if (currPhase !== nextPhase) { // transition found
-          let nextOccurr;
-          // check if this is the last or the first occurrence
-          if(nextPhase === undefined) {
-            nextPhase = 9999;
-          } else {
-            let nextFrame = spObj.parsedData[endIdx + 1]?.Frame;
-            nextOccurr = sp.value.find(t => t.start === nextFrame);
+
+          if (nextPhase === undefined) { // check if this is the last occurrence
+            nextPhase = 'end';
           }
 
-          if (nextPhase === 9999 || nextOccurr !== undefined) { // transition present in the provided data
+          let resultEntry = result.find(t => t.object.start === currPhase && t.object.end === nextPhase);
+          if (resultEntry !== undefined) { // transition already present in the result object
+            resultEntry.value.find(s => s.object === spObj.set)!.value++;
 
-            let resultEntry = result.find(t => t.object.start === currPhase + "" && t.object.end === nextPhase + "");
-            if (resultEntry !== undefined) { // transition already present in the result object
-              resultEntry.value.find(s => s.object === spObj.set)!.value++;
-
-              let spEntry = resultEntry.originalData.find(l => l.object === sp.object);
-              if (spEntry === undefined) {
-                resultEntry.originalData.push(sp)
-              }
-            } else {
-              result.push({
-                object: {start: currPhase + "", end: nextPhase + ""},
-                value: CONSTANTS.datasets.map(d => ({object: d, value: spObj.set === d ? 1 : 0})),
-                originalData: [sp]
-              });
+            let spEntry = resultEntry.originalData.find(l => l.object === sp.object);
+            if (spEntry === undefined) { // assign surgery to original data
+              resultEntry.originalData.push(sp)
             }
+          } else {
+            result.push({
+              object: {start: currPhase, end: nextPhase},
+              value: CONSTANTS.datasets.map(d => ({object: d, value: spObj.set === d ? 1 : 0})),
+              originalData: [sp]
+            });
           }
         }
       });
     });
-
     return result;
   }
 
