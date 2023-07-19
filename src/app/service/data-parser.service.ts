@@ -53,12 +53,11 @@ export class DataParserService {
     }
 
     if (otherFiles.length > 0) {
-      console.log("Could not recognize the following file names:")
-      console.log(otherFiles)
+      console.warn("Could not recognize the following file names:", otherFiles.map(file => file.name))
     }
 
     if (phaseFiles.length != instFiles.length) {
-      console.log(`The number of phase (${phaseFiles.length}) and instrument (${instFiles.length}) annotation files does not match`)
+      console.warn(`The number of phase (${phaseFiles.length}) and instrument (${instFiles.length}) annotation files does not match`)
     }
 
     phaseFiles.forEach(phaseFile => {
@@ -308,7 +307,7 @@ export class DataParserService {
         }
         result.push(unifiedRow);
       } else {
-        console.log(`Skipping unannotated row`)
+        console.warn(`Skipping unannotated row`)
       }
     });
     return result;
