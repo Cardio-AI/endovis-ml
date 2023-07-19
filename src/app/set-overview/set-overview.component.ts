@@ -5,7 +5,7 @@ import * as d3 from 'd3';
 import {CONSTANTS} from "../constants";
 import {DataCounterNew} from "../model/DataCounterNew";
 import {Occurrence} from "../model/Occurrence";
-import {InstrumentSelectionService} from "../instrument-selection.service";
+import {InstrumentSelectionService} from "../service/instrument-selection.service";
 import {PhaseSelectionService} from "../service/phase-selection.service";
 
 @Component({
