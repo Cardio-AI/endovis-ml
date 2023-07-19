@@ -10,7 +10,7 @@ import {WordWrap} from "../util/WordWrap";
 import {DataCounterNew} from "../model/DataCounterNew";
 import {ScaleData} from "../model/ScaleData";
 import {DataCounterSelection} from "../model/DataCounterSelection";
-import {InstrumentSelectionService} from "../instrument-selection.service";
+import {InstrumentSelectionService} from "../service/instrument-selection.service";
 import {PhaseSelectionService} from "../service/phase-selection.service";
 
 @Component({
