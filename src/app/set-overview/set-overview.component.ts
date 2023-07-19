@@ -313,7 +313,7 @@ export class SetOverviewComponent implements OnInit {
     // for each set
     secondaryChartG.each((pData, i, nodes) => {
       const setSurgeries = this.localDatasetCopy.filter(e => e.set === pData);
-      let meanDuration = d3.mean(setSurgeries.map(e => e.duration)) || 0;
+      let meanDuration = d3.mean(setSurgeries.map(e => e.parsedData.length)) || 0;
 
       const xSecondaryChartScales = d3.scaleBand<number>()
         .domain(setSurgeries.map(e => e.spNr))
@@ -354,8 +354,8 @@ export class SetOverviewComponent implements OnInit {
         .attr('x', d => xSecondaryChartScales(d.spNr) || 0)
         .transition()
         .duration(1000)
-        .attr('y', d => ySecondaryChartScale(d.duration))
-        .attr('height', d => ySecondaryChartScale(0) - ySecondaryChartScale(d.duration))
+        .attr('y', d => ySecondaryChartScale(d.parsedData.length))
+        .attr('height', d => ySecondaryChartScale(0) - ySecondaryChartScale(d.parsedData.length))
         .attr('fill', d => {
           if (this.localSelectionCopy.length > 0 && this.localSelectionCopy.map(e => e.object).includes(d.spNr) || this.localSelectionCopy.length === 0) {
             if(d.set) {
@@ -426,7 +426,7 @@ export class SetOverviewComponent implements OnInit {
     return CONSTANTS.datasets.map(set => {
       return {
         object: set,
-        value: data.filter(e => e.set === set).map(e => e.duration).reduce((p, c) => p + c, 0)
+        value: data.filter(e => e.set === set).map(e => e.parsedData.length).reduce((p, c) => p + c, 0)
       }
     }).filter(e => e.value > 0);
   }

@@ -1024,8 +1024,8 @@ export class GraphViewComponent implements OnInit {
   }
 
   private getTransitions(data: DataCounterNew<number, Occurrence[]>[]): DataCounterSelection<Transition, DataCounterNew<string, number>[]>[] {
-
     let result: DataCounterSelection<Transition, DataCounterNew<string, number>[]>[] = [];
+
     data.forEach(sp => { // for each surgery in the entire dataset
       let spObj = this.localDatasetCopy.find(s => s.spNr === sp.object)!;
 
