@@ -7,12 +7,12 @@ import {Occurrence} from "./model/Occurrence";
   providedIn: 'root'
 })
 export class InstrumentSelectionService {
+
   private selection = new Subject<DataCounterNew<number, Occurrence[]>[]>();
 
   selection$ = this.selection.asObservable();
 
-  constructor() {
-  }
+  constructor() { }
 
   updateSelection(selection: DataCounterNew<number, Occurrence[]>[]) {
     this.selection.next(selection);

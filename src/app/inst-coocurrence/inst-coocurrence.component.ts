@@ -384,6 +384,8 @@ export class InstCoocurrenceComponent implements OnInit {
           // attach original frames that will be used for selections
           resEntry.originalData.push({object: sp.spNr, value: instOccur.value});
         } else { // add new occurrence to the result object
+          // if(SetMethods.setEquality(new Set(["1","3"]), instOccur.object)) debugger
+
           let newResEntry: DataCounterSelection<Set<string>, DataCounterNew<string, number>[]> = {
             object: instOccur.object,
             value: CONSTANTS.datasets.map(set => ({object: set, value: 0})),
@@ -446,56 +448,45 @@ export class InstCoocurrenceComponent implements OnInit {
   private selectionToAllOccurrences(selection: DataCounterNew<number, Occurrence[]>[]) {
     let result: DataCounterSelection<Set<string>, DataCounterNew<string, number>[]>[] = [];
 
-    selection.forEach(sp => { // for each surgery in the generic selection object
-      let spObj = this.localDatasetCopy.find(e => e.spNr === sp.object)!;
+    selection.forEach(spSelection => { // for each surgery in the generic selection object
+      let spObj = this.localDatasetCopy.find(e => e.spNr === spSelection.object)!;
 
-      sp.value.forEach(occ => { // for each occurrence of the surgery in the selection
+      spSelection.value.forEach(selOcc => { // for each occurrence of the selected surgery
 
-        spObj.occIndex.forEach(instOcc => { // for each instrument co-occurrence in the original surgery
+        spObj.occIndex.forEach(instSet => { // for each instrument co-occurrence in the original surgery
           let overlapOcc: Occurrence[] = [];
           let overlapCounter = 0;
 
-          let resEntry = result.find(u => SetMethods.setEquality(u.object, instOcc.object));
+          instSet.value.forEach(instOcc => { // for each occurrence of instrument co-occurrence in the original data
+            let overlapStart = Math.max(selOcc.start, instOcc.start);
+            let overlapEnd = Math.min(selOcc.end, instOcc.end);
 
-          instOcc.value.forEach(e => { // for each occurrence of instrument co-occurrence in the original data
-            let overlapStart = Math.max(occ.start, e.start);
-            let overlapEnd = Math.min(occ.end, e.end);
-
-            if (overlapStart < overlapEnd) { // intervals overlap?
-              overlapCounter += spObj.parsedData.filter(row => row.Frame >= overlapStart && row.Frame <= overlapEnd).length;
+            if (overlapStart <= overlapEnd) { // intervals overlap?
               overlapOcc.push({start: overlapStart, end: overlapEnd});
+              overlapCounter += spObj.parsedData.filter(row => row.Frame >= overlapStart && row.Frame <= overlapEnd).length;
             }
           });
 
+          // store
           if (overlapCounter > 0) {
-            if (resEntry === undefined) { // new selection object
+            let resEntry = result.find(u => SetMethods.setEquality(u.object, instSet.object));
+            if (resEntry === undefined) { // create new result entry
               let newEntry = {
-                object: instOcc.object,
-                value: CONSTANTS.datasets.map(s => ({object: s, value: 0})),
+                object: instSet.object,
+                value: CONSTANTS.datasets.map(s => ({object: s, value: s === spObj.set ? overlapCounter : 0})),
                 originalData: [{object: spObj.spNr, value: overlapOcc}]
               }
 
-              newEntry.value.find(s => s.object === spObj.set)!.value = overlapCounter;
-
               result.push(newEntry);
-            } else {
+            } else { // result entry already exists
               let setEntry = resEntry.value.find(l => l.object === spObj.set)!;
-              if (setEntry === undefined) {
-                if(spObj.set) {
-                  resEntry.value.push({object: spObj.set, value: overlapCounter});
-                } else {
-                  throw new Error(`Surgery ${spObj.spNr} is not assigned to any set`)
-                }
+              setEntry.value += overlapCounter;
 
+              let spEntry = resEntry.originalData.find(s => s.object === spObj.spNr);
+              if (spEntry === undefined) {
+                resEntry.originalData.push({object: spObj.spNr, value: overlapOcc});
               } else {
-                setEntry.value += overlapCounter
-                let spEntry = resEntry.originalData.find(s => s.object === spObj.spNr);
-
-                if (spEntry === undefined) {
-                  resEntry.originalData.push({object: spObj.spNr, value: overlapOcc})
-                } else {
-                  spEntry.value.push(...overlapOcc)
-                }
+                spEntry.value.push(...overlapOcc);
               }
             }
           }
