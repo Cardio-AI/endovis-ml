@@ -7,9 +7,7 @@ import {Occurrence} from "../model/Occurrence";
 import {DataCounterNew} from "../model/DataCounterNew";
 import {SetMethods} from "../util/SetMethods";
 import {NestedOccurrence} from "../model/NestedOccurrence";
-import {FileUpload} from "../model/FileUpload";
-import {ParamFile} from "../model/ParamFile";
-import {Delimiter} from "../enums/Delimiter";
+import {UserFileUpload} from "../model/UserFileUpload";
 
 
 @Injectable({
@@ -17,139 +15,83 @@ import {Delimiter} from "../enums/Delimiter";
 })
 export class DataParserService {
 
-  constructor() {
-  }
+  constructor() { }
 
-  parseParamFile(file: FileUpload<string>) {
-    return JSON.parse(file.content) as ParamFile;
-  }
+  parseData(phaseData: UserFileUpload<string>[], instData: UserFileUpload<string>[]): SurgeryData[] {
+    return phaseData.map((e) => {
 
-  splitString(str: string): string[] {
-    const arr = str.split(",").map(e => e.trim());
+      const fileName = e.name.match(new RegExp(`(.+)${CONSTANTS.phaseFileSuffix}`))![1];
+      const fileNumber = parseInt(e.name.match(/\d+/)![0]);
 
-    if(arr.length == 0) {
-      throw new Error("The provided string is empty");
-    }
-
-    return arr;
-  }
-
-  matchPhaseAndInstFiles(fileList: FileUpload<string>[], phaseId: string, instId: string) {
-    let matches: [FileUpload<string>, FileUpload<string>][] = [];
-    const regex: RegExp = /0*\d+/;
-
-    const phaseFiles = fileList.filter(file => file.name.includes(phaseId));
-    const instFiles = fileList.filter(file => file.name.includes(instId));
-    const otherFiles = fileList.filter(file => !file.name.includes(phaseId) && !file.name.includes(instId) && file.name !== 'param.json');
-
-    if (phaseFiles.length == 0) {
-      throw new Error('Could not find phase annotation files');
-    }
-
-    if (instFiles.length == 0) {
-      throw new Error('Could not find instrument annotation files');
-    }
-
-    if (otherFiles.length > 0) {
-      console.log("Could not recognize the following file names:")
-      console.log(otherFiles)
-    }
-
-    if (phaseFiles.length != instFiles.length) {
-      console.log(`The number of phase (${phaseFiles.length}) and instrument (${instFiles.length}) annotation files does not match`)
-    }
-
-    phaseFiles.forEach(phaseFile => {
-      const surgeryId = phaseFile.name.match(regex)![0];
-
-      const instFile = instFiles.filter(instFile => instFile.name.includes(surgeryId))
-
-      if (instFile.length == 1) {
-        matches.push([phaseFile, instFile[0]])
-      } else {
-        throw new Error(`Could not find matching instrument annotation file for ${phaseFile.name}`)
-      }
-    });
-
-    return matches;
-  }
-
-  parseData(phaseFile: FileUpload<string>, instFile: FileUpload<string>, phaseId: string, delimiter: Delimiter, instLabels: string[]): SurgeryData {
-    const surgeryName: string = this.filenameToSurgeryName(phaseFile.name, phaseId);
-    const fileNumber: number = this.surgeryNameToSurgeryId(surgeryName);
-
-    const delimiterValue = this.convertDelimiter(delimiter);
-
-
-
-    // parse phase annotations
-    const parsedPhases: PhaseAnnotationRow[] = d3.dsvFormat(delimiterValue)
-      .parse(phaseFile.content, (row: d3.DSVRaw<PhaseAnnotationRow>, i: number): PhaseAnnotationRow => {
-        if (!row.Frame || !row.Phase || isNaN(parseInt(row.Frame)) || isNaN(parseInt(row.Phase))) {
-          throw new Error(`Invalid value in the phase annotation file`)
-        }
-
+      let parsedPhases = d3.csvParse(e.content, row => {
         return {
-          Frame: parseInt(row.Frame),
-          Phase: parseInt(row.Phase),
+          frame: +row[CONSTANTS.columnNames.frame]!,
+          phase: +row[CONSTANTS.columnNames.phase]!
         }
       });
 
-    const duration = parsedPhases.length;
+      const duration = parsedPhases.length;
 
-    // parse instrument annotations
-    const parsedInst = d3.dsvFormat(delimiterValue)
-      .parse(instFile.content, (row: d3.DSVRaw<Record<string, number>>, i: number) => {
+      const instFile = instData.find(e => e.name === `${fileName}${CONSTANTS.instFileSuffix}`);
 
+      let parsedInst: Record<string, number>[] = d3.csvParse(instFile!.content, row => {
         let result: Record<string, number> = {};
-
         Object.keys(row).forEach((key: string) => {
-          let value = row[key];
-
-          if (!value || isNaN(parseInt(value))) {
-            throw new Error(`Invalid value in the phase annotation file`)
-          }
-
-          result[key] = parseInt(value);
+          result[key] = +row[key]!;
         })
         return result;
       });
 
-    const currSet = CONSTANTS.datasets.filter(d => d !== 'test')
-      .find(set => CONSTANTS.splits[0][set].includes(fileNumber)) || (CONSTANTS.testSplit.includes(fileNumber) ? 'test' : 'unassigned');
+      // let parsedPredictions = d3.csvParse(predData[i], row => {
+      //   return {
+      //     frame: +row['frame']!,
+      //     phase: +row['phase']!
+      //   }
+      // });
+      //
+      // const labels = tf.tensor1d(parsedPhases.map(e => e['phase']), 'int32');
+      // const predictions = tf.tensor1d(parsedPredictions.map(e => e['phase']), 'int32');
+      // const numClasses = 7;
+      // const out = tf.math.confusionMatrix(labels, predictions, numClasses);
+      //
+      // console.log(out.arraySync())
 
-    const phaseIndex = this.createPhaseIndex(parsedPhases);
-    const phaseIndex2 = this.createPhaseIndex2(parsedPhases);
+      const currSet = CONSTANTS.datasets.filter(d => d !== 'test')
+        .find(set => CONSTANTS.splits[0][set].includes(fileNumber)) || (CONSTANTS.testSplit.includes(fileNumber) ? 'test' : 'unassigned');
 
-    const instIndex = this.createInstIndex(parsedInst, parsedPhases[parsedPhases.length - 1].Frame);
-    const idleId = CONSTANTS.instrumentMappingInverse(CONSTANTS.idleLabel)!;
-    const idleIndex = this.createIdleIndex(parsedInst, parsedPhases[parsedPhases.length - 1].Frame);
-    instIndex[idleId] = idleIndex;
+      const phaseIndex = this.createPhaseIndex(parsedPhases);
+      const phaseIndex2 = this.createPhaseIndex2(parsedPhases);
 
-    const occIndex = this.createInstCooccurrenceIndex(parsedInst, parsedPhases[parsedPhases.length - 1].Frame);
-    occIndex.push({object: new Set([idleId]), value: idleIndex})
-    // console.log(duration)
-    // console.log(d3.sum(occIndex.map(e => d3.sum(e.value.map(u => u.end - u.start + 1)))))
-    // console.log(d3.sum(this.createIdleIndex(parsedInst, duration).map(e => e.end - e.start + 1)))
-    // console.log(duration - (d3.sum(occIndex.map(e => d3.sum(e.value.map(u => u.end - u.start + 1)))) + d3.sum(this.createIdleIndex(parsedInst, duration).map(e => e.end - e.start + 1))))
-    // console.log('##')
+      const instIndex = this.createInstIndex(parsedInst, parsedPhases[parsedPhases.length - 1].frame);
+      const idleId = CONSTANTS.instrumentMappingInverse(CONSTANTS.idleLabel)!;
+      const idleIndex = this.createIdleIndex(parsedInst, parsedPhases[parsedPhases.length - 1].frame);
+      instIndex[idleId] = idleIndex;
 
-    // this.mergePhaseIndexToInstIndex(phaseIndex2, occIndex);
-    // this.mergeInstIndexToPhaseIndex(phaseIndex2, occIndex);
+      const occIndex = this.createInstCooccurrenceIndex(parsedInst, parsedPhases[parsedPhases.length - 1].frame);
+      occIndex.push({object: new Set([idleId]), value: idleIndex})
+      // console.log(duration)
+      // console.log(d3.sum(occIndex.map(e => d3.sum(e.value.map(u => u.end - u.start + 1)))))
+      // console.log(d3.sum(this.createIdleIndex(parsedInst, duration).map(e => e.end - e.start + 1)))
+      // console.log(duration - (d3.sum(occIndex.map(e => d3.sum(e.value.map(u => u.end - u.start + 1)))) + d3.sum(this.createIdleIndex(parsedInst, duration).map(e => e.end - e.start + 1))))
+      // console.log('##')
 
-    return {
-      spNr: fileNumber,
-      spName: surgeryName,
-      phaseData: parsedPhases,
-      instData: parsedInst,
-      phaseIndex: phaseIndex,
-      phaseIndex2: phaseIndex2,
-      instIndex: instIndex,
-      occIndex: occIndex,
-      set: currSet,
-      // set: CONSTANTS.datasets[Math.floor(Math.random() * CONSTANTS.datasets.length)],
-      duration: duration,
-    };
+      // this.mergePhaseIndexToInstIndex(phaseIndex2, occIndex);
+      // this.mergeInstIndexToPhaseIndex(phaseIndex2, occIndex);
+
+      return {
+        spNr: fileNumber,
+        spName: fileName,
+        phaseData: parsedPhases,
+        instData: parsedInst,
+        phaseIndex: phaseIndex,
+        phaseIndex2: phaseIndex2,
+        instIndex: instIndex,
+        occIndex: occIndex,
+        set: currSet,
+        // set: CONSTANTS.datasets[Math.floor(Math.random() * CONSTANTS.datasets.length)],
+        duration: duration,
+      };
+    });
   }
 
   private createPhaseIndex(phaseAnnot: PhaseAnnotationRow[]): Record<string, Occurrence[]> {
@@ -164,18 +106,18 @@ export class DataParserService {
     let currPhase = -1;
 
     phaseAnnot.forEach(phaseAnnotRow => { // for each frame
-      if (phaseAnnotRow.Frame === 0) { // first frame
-        startFrame = phaseAnnotRow.Frame;
-        currPhase = phaseAnnotRow.Phase;
+      if (phaseAnnotRow.frame === 0) { // first frame
+        startFrame = phaseAnnotRow.frame;
+        currPhase = phaseAnnotRow.phase;
       }
 
-      if (phaseAnnotRow.Phase !== currPhase) { // phase changed
+      if (phaseAnnotRow.phase !== currPhase) { // phase changed
         result[currPhase].push({start: startFrame, end: currFrame})
-        startFrame = phaseAnnotRow.Frame;
-        currPhase = phaseAnnotRow.Phase;
+        startFrame = phaseAnnotRow.frame;
+        currPhase = phaseAnnotRow.phase;
       }
 
-      currFrame = phaseAnnotRow.Frame;
+      currFrame = phaseAnnotRow.frame;
     })
 
     // flush remaining data
@@ -188,10 +130,7 @@ export class DataParserService {
 
   private createPhaseIndex2(phaseAnnot: PhaseAnnotationRow[]): DataCounterNew<string, NestedOccurrence<Set<string>>[]>[] {
 
-    let result: DataCounterNew<string, NestedOccurrence<Set<string>>[]>[] = CONSTANTS.phaseMapping.domain().map((phaseId: string) => ({
-      object: phaseId,
-      value: []
-    }))
+    let result: DataCounterNew<string, NestedOccurrence<Set<string>>[]>[] = CONSTANTS.phaseMapping.domain().map((phaseId: string) => ({object: phaseId, value: []}))
 
     let startFrame = -1;
 
@@ -199,32 +138,24 @@ export class DataParserService {
     let currPhase = -1;
 
     phaseAnnot.forEach(phaseAnnotRow => { // for each frame
-      if (phaseAnnotRow.Frame === 0) { // first frame
-        startFrame = phaseAnnotRow.Frame;
-        currPhase = phaseAnnotRow.Phase;
+      if (phaseAnnotRow.frame === 0) { // first frame
+        startFrame = phaseAnnotRow.frame;
+        currPhase = phaseAnnotRow.phase;
       }
 
-      if (phaseAnnotRow.Phase !== currPhase) { // phase changed
-        result.find(e => e.object === currPhase + "")!.value.push({
-          start: startFrame,
-          end: currFrame,
-          nestedOccurrences: []
-        })
+      if (phaseAnnotRow.phase !== currPhase) { // phase changed
+        result.find(e => e.object === currPhase + "")!.value.push({start: startFrame, end: currFrame, nestedOccurrences: []})
 
-        startFrame = phaseAnnotRow.Frame;
-        currPhase = phaseAnnotRow.Phase;
+        startFrame = phaseAnnotRow.frame;
+        currPhase = phaseAnnotRow.phase;
       }
 
-      currFrame = phaseAnnotRow.Frame;
+      currFrame = phaseAnnotRow.frame;
     })
 
     // flush remaining data
     if (startFrame !== null) {
-      result.find(e => e.object === currPhase + "")!.value.push({
-        start: startFrame,
-        end: currFrame,
-        nestedOccurrences: []
-      })
+      result.find(e => e.object === currPhase + "")!.value.push({start: startFrame, end: currFrame, nestedOccurrences: []})
     }
 
     return result;
@@ -250,12 +181,9 @@ export class DataParserService {
             startFrame = currFrame;
           } else if (startFrame !== -1) {
             if (currFrame - prevFrame > CONSTANTS.instFrameStep) { // this check is only necessary because of heico data
-              result[instId].push({
-                start: startFrame,
-                end: Math.min(prevFrame + CONSTANTS.instFrameStep - 1, lastFrameNr)
-              });
+              result[instId].push({start: startFrame, end: Math.min(prevFrame + CONSTANTS.instFrameStep - 1, lastFrameNr)});
               startFrame = -1;
-            } else if (row[inst] === 0) { // last frame
+            } else if(row[inst] === 0) { // last frame
               result[instId].push({start: startFrame, end: currFrame - 1});
               startFrame = -1;
             }
@@ -285,7 +213,7 @@ export class DataParserService {
       currFrame = row[CONSTANTS.columnNames.frame];
       const currRowNotNull = CONSTANTS.instrumentMapping.range().filter(e => e !== CONSTANTS.columnNames.frame).filter(u => row[u] > 0);
 
-      if (startFrame === -1 && currFrame - prevFrame > CONSTANTS.instFrameStep) { // this check is only necessary because of heico data
+      if(startFrame === -1 && currFrame - prevFrame > CONSTANTS.instFrameStep) { // this check is only necessary because of heico data
         startFrame = Math.min(prevFrame + CONSTANTS.instFrameStep, lastFrameNr);
       }
 
@@ -308,7 +236,7 @@ export class DataParserService {
     return result;
   }
 
-  private createInstCooccurrenceIndex(instAnnot: Record<string, number>[], lastFrameNr: number): DataCounterNew<Set<string>, NestedOccurrence<string>[]>[] {
+  private createInstCooccurrenceIndex(instAnnot: Record<string, number>[], lastFrameNr: number): DataCounterNew<Set<string>,  NestedOccurrence<string>[]>[] {
     let result: DataCounterNew<Set<string>, NestedOccurrence<string>[]>[] = [];
 
     instAnnot.forEach(frame => { // for each frame
@@ -324,11 +252,7 @@ export class DataParserService {
 
       if (occurrenceSet.size > 0) { // single instruments are also counted
         let resultEntry = result.find(e => SetMethods.setEquality(e.object, occurrenceSet));
-        let currOcc = {
-          start: frame[CONSTANTS.columnNames.frame],
-          end: Math.min(frame[CONSTANTS.columnNames.frame] + CONSTANTS.instFrameStep - 1, lastFrameNr),
-          nestedOccurrences: []
-        };
+        let currOcc = {start: frame[CONSTANTS.columnNames.frame], end: Math.min(frame[CONSTANTS.columnNames.frame] + CONSTANTS.instFrameStep - 1, lastFrameNr), nestedOccurrences: []};
 
         if (resultEntry !== undefined) { // occurrence already present in the result object
 
@@ -351,43 +275,57 @@ export class DataParserService {
     return result;
   }
 
-  private filenameToSurgeryName(filename: string, discard: string) {
-    let surgeryName = filename.split(".")[0].replace(discard, "");
-    const regex = /[a-zA-Z0-9]/
+  /**
+   * In-place modification of phaseIndex object
+   * @param phaseIndex
+   * @param instIndex
+   * @private
+   */
+  private mergePhaseIndexToInstIndex(phaseIndex: DataCounterNew<string, NestedOccurrence<Set<string>>[]>[], instIndex: DataCounterNew<Set<string>, NestedOccurrence<string>[]>[]) {
+    phaseIndex.forEach(phase => {
+      phase.value.forEach(phaseOcc => {
+        instIndex.forEach(inst => {
+          inst.value.forEach(instOcc => {
+            let overlapStart = Math.max(phaseOcc.start, instOcc.start);
+            let overlapEnd = Math.min(phaseOcc.end, instOcc.end);
 
-    if(!surgeryName.charAt(0).match(regex)) {
-      surgeryName = surgeryName.slice(1);
-    }
+            if(overlapStart < overlapEnd) {
+              let entry = phaseOcc.nestedOccurrences.find(e => SetMethods.setEquality(e.object, inst.object));
 
-    if(!surgeryName.charAt(surgeryName.length - 1).match(regex)) {
-      surgeryName = surgeryName.slice(0, surgeryName.length - 1);
-    }
-
-    if(surgeryName.length > 0) {
-      return surgeryName
-    } else {
-      throw new Error('Could not infer surgery name from a given filename')
-    }
+              if(entry !== undefined) {
+                entry.value.push({start: overlapStart, end: overlapEnd});
+              } else {
+                phaseOcc.nestedOccurrences.push({object: inst.object, value: [{start: overlapStart, end: overlapEnd}]});
+              }
+            }
+          });
+        });
+      });
+    });
   }
 
-  private surgeryNameToSurgeryId(surgeryName: string) {
-    const surgeryIdRegex = surgeryName.match(/\d+/);
+  private mergeInstIndexToPhaseIndex(phaseIndex: DataCounterNew<string, NestedOccurrence<Set<string>>[]>[], instIndex: DataCounterNew<Set<string>, NestedOccurrence<string>[]>[]) {
+    instIndex.forEach(inst => {
+      inst.value.forEach(instOcc => {
+        phaseIndex.forEach(phase => {
+          phase.value.forEach(phaseOcc => {
 
-    if(surgeryIdRegex) {
-      return parseInt(surgeryIdRegex[0]);
-    } else {
-      throw new Error("Could not infer surgery ID from the given surgery name");
-    }
+            let overlapStart = Math.max(phaseOcc.start, instOcc.start);
+            let overlapEnd = Math.min(phaseOcc.end, instOcc.end);
+
+            if (overlapStart < overlapEnd) {
+              let entry = instOcc.nestedOccurrences.find(e => e.object === phase.object);
+
+              if (entry !== undefined) {
+                entry.value.push({start: overlapStart, end: overlapEnd});
+              } else {
+                instOcc.nestedOccurrences.push({object: phase.object, value: [{start: overlapStart, end: overlapEnd}]});
+              }
+            }
+          });
+        });
+      });
+    });
   }
 
-  private convertDelimiter(delimiter: Delimiter) {
-    switch (delimiter) {
-      case Delimiter.COMMA:
-        return ",";
-      case Delimiter.TAB:
-        return "\t";
-      case Delimiter.SEMICOLON:
-        return ";";
-    }
-  }
 }

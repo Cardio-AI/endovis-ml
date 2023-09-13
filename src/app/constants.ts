@@ -7,10 +7,10 @@ export class CONSTANTS {
   public static instFileSuffix: string;
 
   // public static phaseAnnotations = d3.range(1, 9).map(num => `/data/miccai/Prokto${(num)}.csv`);
-  public static phaseAnnotations = d3.range(1, 81).map(num => `/sample_dataset/video${("0" + num).slice(-2)}_phase.csv`);
+  public static phaseAnnotations = d3.range(1, 81).map(num => `/data/dataset1/video${("0" + num).slice(-2)}-phase.txt`);
 
   // public static instAnnotations = d3.range(1, 9).map(num => `/data/miccai/inst/Prokto${(num)}.csv`);
-  public static instAnnotations = d3.range(1, 81).map(num => `/sample_dataset/video${("0" + num).slice(-2)}_tool.csv`);
+  public static instAnnotations = d3.range(1, 81).map(num => `/data/dataset1/video${("0" + num).slice(-2)}-tool.txt`);
 
   public static instFrameStep = 25;
 
