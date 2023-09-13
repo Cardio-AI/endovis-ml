@@ -364,6 +364,41 @@ export class InstCoocurrenceComponent implements OnInit {
   }
 
   /**
+   * Convert occurrence data to barchart data format
+   * @param occurData
+   * @private
+   */
+  private occurrenceToBarchartData(occurData: DataCounterNew<Set<string>, DataCounterNew<string, number>[]>[]): DataCounter<DataCounter<number>[]>[] {
+    let result: DataCounter<DataCounter<number>[]>[] = [];
+
+    let iterObj = CONSTANTS.instrumentMapping.domain();
+
+    // remove idle node
+    if (!this.viewIdle) {
+      iterObj = iterObj.filter(e => e !== CONSTANTS.instrumentMappingInverse('Idle'));
+    }
+
+    iterObj.forEach(instId => { // for each instrument
+      let dataCounter: DataCounter<number>[] = [];
+
+      CONSTANTS.datasets.forEach(set => { // for each dataset
+        const data = occurData.filter(e => e.object.has(instId)); // get all co-occurrences that contain this instruments
+
+        let counter = 0;
+        data.forEach(cooccurr => { // for each set
+          counter += cooccurr.value.find(e => e.object === set)!.value;
+        });
+
+        dataCounter.push({object: set, value: counter});
+      });
+
+      result.push({object: instId, value: dataCounter});
+    });
+
+    return result;
+  }
+
+  /**
    * Convert occurrence data to the format that is used in this view
    * @private
    */
@@ -402,39 +437,45 @@ export class InstCoocurrenceComponent implements OnInit {
     return result;
   }
 
-  /**
-   * Convert occurrence data to barchart data format
-   * @param occurData
-   * @private
-   */
-  private occurrenceToBarchartData(occurData: DataCounterNew<Set<string>, DataCounterNew<string, number>[]>[]): DataCounter<DataCounter<number>[]>[] {
-    let result: DataCounter<DataCounter<number>[]>[] = [];
+  private findIdx(data: DataCounterNew<string, DataCounterNew<string, number>[]>[], instId: string) {
+    return data.findIndex(e => e.object === instId);
+  }
 
-    let iterObj = CONSTANTS.instrumentMapping.domain();
+  private instIdxToCoord(instIdx: number, angle: number, radius: number): [number, number] {
+    return [this.instIdxToXCoord(instIdx, angle, radius),
+      this.instIdxToYCoord(instIdx, angle, radius)];
+  }
 
-    // remove idle node
-    if (!this.viewIdle) {
-      iterObj = iterObj.filter(e => e !== CONSTANTS.instrumentMappingInverse('Idle'));
-    }
+  private instIdxToXCoord(instIdx: number, angle: number, radius: number) {
+    return Math.round(Math.cos((angle * instIdx) - Math.PI /2 ) * radius);
+  }
 
-    iterObj.forEach(instId => { // for each instrument
-      let dataCounter: DataCounter<number>[] = [];
+  private instIdxToYCoord(instIdx: number, angle: number, radius: number) {
+    return Math.round(Math.sin( (angle * instIdx) - Math.PI / 2) * radius); // Math.PI * 2 / data.length
+  }
 
-      CONSTANTS.datasets.forEach(set => { // for each dataset
-        const data = occurData.filter(e => e.object.has(instId)); // get all co-occurrences that contain this instruments
-
-        let counter = 0;
-        data.forEach(cooccurr => { // for each set
-          counter += cooccurr.value.find(e => e.object === set)!.value;
-        });
-
-        dataCounter.push({object: set, value: counter});
-      });
-
-      result.push({object: instId, value: dataCounter});
+  private instSetToCentroidCoord(instSet: Set<string>, data: DataCounterNew<string, DataCounterNew<string, number>[]>[], angle: number, radius: number) {
+    let points: [number, number][] = [...instSet].map(instId => {
+      return this.instIdxToCoord(this.findIdx(data, instId), angle, radius);
     });
 
-    return result;
+    if(points.length === 1){
+      return points[0]
+    } else if(points.length === 2) {
+      return [(points[0][0] + points[1][0]) / 2, (points[0][1] + points[1][1]) / 2];
+    }
+
+    let polygonPoints = this.pointsToPolygon(points);
+    return d3.polygonCentroid(polygonPoints);
+  }
+
+  private pointsToPolygon(points: [number, number][]): [number, number][] {
+    let result = d3.polygonHull(points);
+    if(result !== null) {
+      return result;
+    } else {
+      return [];
+    }
   }
 
   /**
@@ -503,47 +544,6 @@ export class InstCoocurrenceComponent implements OnInit {
       });
     });
     return result;
-  }
-
-  private findIdx(data: DataCounterNew<string, DataCounterNew<string, number>[]>[], instId: string) {
-    return data.findIndex(e => e.object === instId);
-  }
-
-  private instIdxToCoord(instIdx: number, angle: number, radius: number): [number, number] {
-    return [this.instIdxToXCoord(instIdx, angle, radius),
-      this.instIdxToYCoord(instIdx, angle, radius)];
-  }
-
-  private instIdxToXCoord(instIdx: number, angle: number, radius: number) {
-    return Math.round(Math.cos((angle * instIdx) - Math.PI /2 ) * radius);
-  }
-
-  private instIdxToYCoord(instIdx: number, angle: number, radius: number) {
-    return Math.round(Math.sin( (angle * instIdx) - Math.PI / 2) * radius); // Math.PI * 2 / data.length
-  }
-
-  private instSetToCentroidCoord(instSet: Set<string>, data: DataCounterNew<string, DataCounterNew<string, number>[]>[], angle: number, radius: number) {
-    let points: [number, number][] = [...instSet].map(instId => {
-      return this.instIdxToCoord(this.findIdx(data, instId), angle, radius);
-    });
-
-    if(points.length === 1){
-      return points[0]
-    } else if(points.length === 2) {
-      return [(points[0][0] + points[1][0]) / 2, (points[0][1] + points[1][1]) / 2];
-    }
-
-    let polygonPoints = this.pointsToPolygon(points);
-    return d3.polygonCentroid(polygonPoints);
-  }
-
-  private pointsToPolygon(points: [number, number][]): [number, number][] {
-    let result = d3.polygonHull(points);
-    if(result !== null) {
-      return result;
-    } else {
-      return [];
-    }
   }
 
   private updateCircles(instCooccurrNodes: InstCooccurrenceNode<Set<string>, DataCounterNew<string, number>[]>[], data: DataCounterNew<string, DataCounterNew<string, number>[]>[], angle:number, radius: number, nodeRadius: number) {
