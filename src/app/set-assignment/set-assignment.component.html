@@ -25,7 +25,7 @@
           <div class="dataset-item" *ngFor="let sp of localDatasetCopy | datasetFilter : 'unassigned'"
                draggable="true" (dragstart)="dragstart($event, sp)" (dragend)="dragend($event)">
             <div class="dataset-item-name">{{ sp.spName }}</div>
-            <div class="dataset-item-duration">{{ sp.parsedData.length | number: '2.'}} frames</div>
+            <div class="dataset-item-duration">{{ sp.duration | number: '2.'}} frames</div>
           </div>
         </div>
       </div>
@@ -34,7 +34,7 @@
           <div class="dataset-item"  *ngFor="let sp of localDatasetCopy | datasetFilter : 'train'"
                draggable="true" (dragstart)="dragstart($event, sp)" (dragend)="dragend($event)">
             <div class="dataset-item-name">{{ sp.spName }}</div>
-            <div class="dataset-item-duration">{{ sp.parsedData.length | number: '2.' }} frames</div>
+            <div class="dataset-item-duration">{{ sp.duration | number: '2.' }} frames</div>
           </div>
         </div>
       </div>
@@ -43,7 +43,7 @@
           <div class="dataset-item"  *ngFor="let sp of localDatasetCopy | datasetFilter : 'validation'"
                draggable="true" (dragstart)="dragstart($event, sp)" (dragend)="dragend($event)">
             <div class="dataset-item-name">{{ sp.spName }}</div>
-            <div class="dataset-item-duration">{{ sp.parsedData.length | number: '2.' }} frames</div>
+            <div class="dataset-item-duration">{{ sp.duration | number: '2.' }} frames</div>
           </div>
         </div>
       </div>
@@ -52,7 +52,7 @@
           <div class="dataset-item"  *ngFor="let sp of localDatasetCopy | datasetFilter : 'test'"
                draggable="true" (dragstart)="dragstart($event, sp)" (dragend)="dragend($event)">
             <div class="dataset-item-name">{{ sp.spName }}</div>
-            <div class="dataset-item-duration">{{ sp.parsedData.length | number: '2.' }} frames</div>
+            <div class="dataset-item-duration">{{ sp.duration | number: '2.' }} frames</div>
           </div>
         </div>
       </div>

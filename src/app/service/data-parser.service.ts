@@ -94,6 +94,8 @@ export class DataParserService {
         }
       });
 
+    const duration = parsedPhases.length;
+
     // parse instrument annotations
     const parsedInst = d3.dsvFormat(delimiterValue)
       .parse(instFile.content, (row: d3.DSVRowString<"Frame" | string>, i: number) => {
@@ -118,9 +120,6 @@ export class DataParserService {
         return result;
       });
 
-    // unify phase and instrument annotations in one object
-    const unifiedData = this.unifyFiles(parsedPhases, parsedInst, instLabels);
-
     // initial assignment to sets
     const currSet = trainingSet.has(fileNumber) ?
       Split.Training : validationSet.has(fileNumber) ?
@@ -139,12 +138,15 @@ export class DataParserService {
     return {
       spNr: fileNumber,
       spName: surgeryName,
-      parsedData: unifiedData,
+      // phaseData: parsedPhases,
+      // instData: parsedInst,
+      parsedData: this.unifyFiles(parsedPhases, parsedInst, instLabels),
       phaseIndex: phaseIndex,
       instIndex: instIndex,
       occIndex: occIndex,
       set: currSet,
       // set: CONSTANTS.datasets[Math.floor(Math.random() * CONSTANTS.datasets.length)],
+      duration: duration,
     };
   }
 
