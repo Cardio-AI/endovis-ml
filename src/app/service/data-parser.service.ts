@@ -4,6 +4,7 @@ import {SurgeryData} from "../model/SurgeryData";
 import {PhaseAnnotationRow} from "../model/PhaseAnnotationRow";
 import {CONSTANTS} from "../constants";
 import {Occurrence} from "../model/Occurrence";
+import * as tf from '@tensorflow/tfjs';
 import {DataCounterSelection} from "../model/DataCounterSelection";
 import {DataCounterNew} from "../model/DataCounterNew";
 import {SetMethods} from "../util/SetMethods";
