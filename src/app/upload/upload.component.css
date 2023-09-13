@@ -15,11 +15,6 @@
   display: none;
 }
 
-/*.browse-button {*/
-/*  color: blue;*/
-/*  cursor: pointer;*/
-/*}*/
-
 .upload-area {
   display: flex;
   justify-content: center;
@@ -79,10 +74,6 @@
   flex-direction: row;
   /*gap: 0 30px;*/
 }
-
-/*.table {*/
-/*  margin: 7px 0;*/
-/*}*/
 
 .input-cell {
   resize: none;

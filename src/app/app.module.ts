@@ -16,6 +16,7 @@ import {UploadComponent} from './upload/upload.component';
 import {FileDropDirective} from './directives/file-drop.directive';
 import {FormsModule} from "@angular/forms";
 import {CapitalizePipe} from './pipe/capitalize.pipe';
+import {LoaderComponent} from './loader/loader.component';
 
 @NgModule({
   declarations: [
@@ -29,7 +30,8 @@ import {CapitalizePipe} from './pipe/capitalize.pipe';
     LandingComponent,
     UploadComponent,
     FileDropDirective,
-    CapitalizePipe
+    CapitalizePipe,
+    LoaderComponent
   ],
     imports: [
         BrowserModule,
