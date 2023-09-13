@@ -139,7 +139,7 @@ export class DataParserService {
     return {
       spNr: fileNumber,
       spName: surgeryName,
-      // phaseData: parsedPhases,
+      phaseData: parsedPhases,
       // instData: parsedInst,
       parsedData: this.unifyFiles(parsedPhases, parsedInst, instLabels),
       phaseIndex: phaseIndex,

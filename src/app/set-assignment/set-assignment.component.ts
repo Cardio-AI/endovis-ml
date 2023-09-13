@@ -2,6 +2,7 @@ import {Component, OnInit} from '@angular/core';
 import {SurgeryData} from "../model/SurgeryData";
 import * as d3 from "d3";
 import {DataSharingService} from "../service/data-sharing.service";
+import {CONSTANTS} from "../constants";
 import {DataForwardService} from "../service/data-forward.service";
 import {Split} from "../enums/Split";
 
@@ -17,7 +18,7 @@ export class SetAssignmentComponent implements OnInit {
 
   selectedSplit = 0;
 
-  localSplitsCopy = this.dataForwardService.crossValSplits;
+  localSplitsCopy = CONSTANTS.splits;
 
   constructor(private dataForwardService: DataForwardService, private dataSharingService: DataSharingService) {
   }

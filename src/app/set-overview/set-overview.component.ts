@@ -294,7 +294,7 @@ export class SetOverviewComponent implements OnInit {
           .html(d => d)
       );
 
-    const maxDuration = d3.max(this.localDatasetCopy.map(e => e.parsedData.length))! || 1;
+    const maxDuration = d3.max(this.localDatasetCopy.map(e => e.phaseData.length))! || 1;
 
     // setup initial y scale
     const ySecondaryChartScale = d3.scaleLinear()

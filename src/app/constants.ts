@@ -139,14 +139,14 @@ export class CONSTANTS {
   //   }
   // ]
 
-  // public static splits: Record<string, number[]>[] = [
-  //     {
-  //       "train": [0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 13, 14, 15, 17, 19, 20, 23, 24, 25, 26, 27, 29, 30, 33, 34, 38, 39, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 57, 58, 60, 61, 62, 64, 66, 67, 68, 70, 71, 72, 74, 75, 76, 79],
-  //       "validation": [16, 35, 36, 40, 56, 59, 63, 65, 69, 73, 77, 78]
-  //     },
-  // ]
+  public static splits: Record<string, number[]>[] = [
+      {
+        "train": [0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 13, 14, 15, 17, 19, 20, 23, 24, 25, 26, 27, 29, 30, 33, 34, 38, 39, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 57, 58, 60, 61, 62, 64, 66, 67, 68, 70, 71, 72, 74, 75, 76, 79],
+        "validation": [16, 35, 36, 40, 56, 59, 63, 65, 69, 73, 77, 78]
+      },
+  ]
 
-  // public static testSplit: number[] = [9, 12, 18, 21, 22, 28, 31, 32, 37];
+  public static testSplit: number[] = [9, 12, 18, 21, 22, 28, 31, 32, 37];
   // public static testSplit = [1,4];
   // public static testSplit: number[] = [];
   // public static splits: Record<string, number[]>[] = [
