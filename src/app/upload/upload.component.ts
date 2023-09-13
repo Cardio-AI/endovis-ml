@@ -15,7 +15,7 @@ import {FormDataService} from "../service/form-data.service";
 })
 export class UploadComponent implements OnInit {
 
-  allDelimiters = Object.values(Delimiter);
+  separators = Object.values(Delimiter);
   constructor(private formDataService: FormDataService, private dataService: DataService, private dataParserService: DataParserService, private router: Router, private dataForwardService: DataForwardService) {
   }
 
