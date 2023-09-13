@@ -1,13 +1,14 @@
 import {Injectable} from '@angular/core';
 import {HttpClient} from "@angular/common/http";
 import {FileUpload} from "../model/FileUpload";
+import {Location} from "@angular/common"
 
 @Injectable({
   providedIn: 'root'
 })
 export class DataService {
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private location: Location) {}
 
   getLocalFiles(fileList: File[]): Promise<FileUpload<string>>[] {
     return fileList.map((file: File) => {
@@ -34,7 +35,7 @@ export class DataService {
     const paramFilePath = "/assets/param.json"
 
     return new Promise<FileUpload<string>>((res, rej) => {
-      this.http.get(paramFilePath, {responseType: 'text'}).subscribe({
+      this.http.get(this.location.prepareExternalUrl(paramFilePath), {responseType: 'text'}).subscribe({
         next: resp => {
           let result: FileUpload<string> = {
             name: paramFilePath.split("/").slice(-1)[0],
@@ -57,7 +58,7 @@ export class DataService {
 
     return allFiles.map(filePath => {
       return new Promise<FileUpload<string>>((res, rej) => {
-        this.http.get(filePath, {responseType: 'text'}).subscribe({
+        this.http.get(this.location.prepareExternalUrl(filePath), {responseType: 'text'}).subscribe({
           next: resp => {
             let result: FileUpload<string> = {
               name: filePath.split("/").slice(-1)[0],
