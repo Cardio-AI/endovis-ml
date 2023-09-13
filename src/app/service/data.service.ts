@@ -31,10 +31,10 @@ export class DataService {
   }
 
   getServerParamFile(): Promise<FileUpload<string>> {
-    const paramFilePath = "/assets/sample_dataset/param.json"
+    const paramFilePath = "/assets/param.json"
 
     return new Promise<FileUpload<string>>((res, rej) => {
-      this.http.get('/assets/sample_dataset/param.json', {responseType: 'text'}).subscribe({
+      this.http.get(paramFilePath, {responseType: 'text'}).subscribe({
         next: resp => {
           let result: FileUpload<string> = {
             name: paramFilePath.split("/").slice(-1)[0],
@@ -48,11 +48,11 @@ export class DataService {
   }
 
   getServerFiles(): Promise<FileUpload<string>>[] {
-    let spIds = [...Array(80).keys()];
+    let spIds = [...Array(60).keys()];
     spIds = spIds.map(n => n + 1);
 
-    const phaseFiles = spIds.map(num => `/assets/sample_dataset/video${("0" + num).slice(-2)}-phase.txt`);
-    const instFiles = spIds.map(num => `/assets/sample_dataset/video${("0" + num).slice(-2)}-tool.txt`);
+    const phaseFiles = spIds.map(num => `/assets/video${("0" + num).slice(-2)}-phase.txt`);
+    const instFiles = spIds.map(num => `/assets/video${("0" + num).slice(-2)}-tool.txt`);
     const allFiles = phaseFiles.concat(instFiles);
 
     return allFiles.map(filePath => {
