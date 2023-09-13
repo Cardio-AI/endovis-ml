@@ -83,7 +83,7 @@ export class UploadComponent implements OnInit {
     const instLabelsArray = this.dataParserService.splitString(this.instLabels);
 
     let dataset = fileMatches.map(([phaseFile, instFile]) => {
-      return this.dataParserService.parseData(phaseFile, instFile, this.phaseId, this.delimiter, instLabelsArray, new Set(this.crossValSplit[0][0]), new Set(this.crossValSplit[0][1]), new Set(this.testSet));
+      return this.dataParserService.parseData(phaseFile, instFile, this.phaseId, this.delimiter, new Set(this.crossValSplit[0][0]), new Set(this.crossValSplit[0][1]), new Set(this.testSet));
     });
 
     console.log(dataset)
