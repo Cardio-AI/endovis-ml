@@ -8,6 +8,7 @@ export interface SurgeryData {
   phaseData: PhaseAnnotationRow[]; // csv row
   instData: Record<string, number>[]; //csv rows
   phaseIndex: Record<string, Occurrence[]>; // TODO: use DataCounterNew instead?
+  phaseIndex2: DataCounterNew<string, Occurrence[]>[];
   instIndex: Record<string, Occurrence[]>; // TODO: use DataCounterNew instead?
   occIndex: DataCounterNew<Set<string>, Occurrence[]>[]
   set: string | undefined;
