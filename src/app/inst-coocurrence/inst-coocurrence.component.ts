@@ -639,12 +639,7 @@ export class InstCoocurrenceComponent implements OnInit {
             } else {
               let setEntry = resEntry.value.find(l => l.object === spObj.set)!;
               if (setEntry === undefined) {
-                if(spObj.set) {
-                  resEntry.value.push({object: spObj.set, value: overlapCounter});
-                } else {
-                  throw new Error(`Surgery ${spObj.spNr} is not assigned to any set`)
-                }
-
+                resEntry.value.push({object: spObj.set, value: overlapCounter});
               } else {
                 setEntry.value += overlapCounter
                 let spEntry = resEntry.originalData.find(s => s.object === spObj.spNr);

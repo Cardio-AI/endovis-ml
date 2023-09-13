@@ -10,7 +10,6 @@ import {NestedOccurrence} from "../model/NestedOccurrence";
 import {FileUpload} from "../model/FileUpload";
 import {ParamFile} from "../model/ParamFile";
 import {Delimiter} from "../enums/Delimiter";
-import {Split} from "../enums/Split";
 
 
 @Injectable({
@@ -75,17 +74,19 @@ export class DataParserService {
     return matches;
   }
 
-  parseData(phaseFile: FileUpload<string>, instFile: FileUpload<string>, phaseId: string, delimiter: Delimiter, trainingSet: Set<number>, validationSet: Set<number>, testSet:Set<number>): SurgeryData {
+  parseData(phaseFile: FileUpload<string>, instFile: FileUpload<string>, phaseId: string, delimiter: Delimiter, instLabels: string[]): SurgeryData {
     const surgeryName: string = this.filenameToSurgeryName(phaseFile.name, phaseId);
     const fileNumber: number = this.surgeryNameToSurgeryId(surgeryName);
 
     const delimiterValue = this.convertDelimiter(delimiter);
 
+
+
     // parse phase annotations
     const parsedPhases: PhaseAnnotationRow[] = d3.dsvFormat(delimiterValue)
       .parse(phaseFile.content, (row: d3.DSVRaw<PhaseAnnotationRow>, i: number): PhaseAnnotationRow => {
         if (!row.Frame || !row.Phase || isNaN(parseInt(row.Frame)) || isNaN(parseInt(row.Phase))) {
-          throw new Error(`Invalid value in file ${phaseFile.name} at line ${i}`)
+          throw new Error(`Invalid value in the phase annotation file`)
         }
 
         return {
@@ -106,7 +107,7 @@ export class DataParserService {
           let value = row[key];
 
           if (!value || isNaN(parseInt(value))) {
-            throw new Error(`Invalid value in file ${phaseFile.name} at line ${i}`)
+            throw new Error(`Invalid value in the phase annotation file`)
           }
 
           result[key] = parseInt(value);
@@ -114,7 +115,8 @@ export class DataParserService {
         return result;
       });
 
-    const currSet = trainingSet.has(fileNumber) ? Split.Training : validationSet.has(fileNumber) ? Split.Validation :  testSet.has(fileNumber) ? Split.Test : undefined;
+    const currSet = CONSTANTS.datasets.filter(d => d !== 'test')
+      .find(set => CONSTANTS.splits[0][set].includes(fileNumber)) || (CONSTANTS.testSplit.includes(fileNumber) ? 'test' : 'unassigned');
 
     const phaseIndex = this.createPhaseIndex(parsedPhases);
     const phaseIndex2 = this.createPhaseIndex2(parsedPhases);
@@ -126,6 +128,14 @@ export class DataParserService {
 
     const occIndex = this.createInstCooccurrenceIndex(parsedInst, parsedPhases[parsedPhases.length - 1].Frame);
     occIndex.push({object: new Set([idleId]), value: idleIndex})
+    // console.log(duration)
+    // console.log(d3.sum(occIndex.map(e => d3.sum(e.value.map(u => u.end - u.start + 1)))))
+    // console.log(d3.sum(this.createIdleIndex(parsedInst, duration).map(e => e.end - e.start + 1)))
+    // console.log(duration - (d3.sum(occIndex.map(e => d3.sum(e.value.map(u => u.end - u.start + 1)))) + d3.sum(this.createIdleIndex(parsedInst, duration).map(e => e.end - e.start + 1))))
+    // console.log('##')
+
+    // this.mergePhaseIndexToInstIndex(phaseIndex2, occIndex);
+    // this.mergeInstIndexToPhaseIndex(phaseIndex2, occIndex);
 
     return {
       spNr: fileNumber,

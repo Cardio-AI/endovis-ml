@@ -1,4 +1,4 @@
-import {Injectable} from '@angular/core';
+import { Injectable } from '@angular/core';
 import {Subject} from "rxjs";
 import {SurgeryData} from "../model/SurgeryData";
 import {DataCounterNew} from "../model/DataCounterNew";
