@@ -11,7 +11,7 @@ import {InstCooccurrenceNode} from "../model/InstCooccurrenceNode";
 import {DataCounterSelection} from "../model/DataCounterSelection";
 import {SetMethods} from "../util/SetMethods";
 import {PhaseSelectionService} from "../service/phase-selection.service";
-import {InstrumentSelectionService} from "../service/instrument-selection.service";
+import {InstrumentSelectionService} from "../instrument-selection.service";
 
 @Component({
   selector: 'app-inst-coocurrence',
