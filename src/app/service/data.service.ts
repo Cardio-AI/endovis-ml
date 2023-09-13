@@ -9,8 +9,7 @@ export class DataService {
 
   constructor(private http: HttpClient) {}
 
-  // TODO: work with observables
-  readLocalFiles(fileList: File[]): Promise<FileUpload<string>>[] {
+  getLocalFiles(fileList: File[]): Promise<FileUpload<string>>[] {
     return fileList.map((file: File) => {
       return new Promise<FileUpload<string>>((res, rej) => {
         let reader: FileReader = new FileReader();
@@ -24,7 +23,6 @@ export class DataService {
           } else {
             rej('Unsupported file format')
           }
-
         }
         reader.onerror = rej
         reader.readAsText(file, "UTF-8");
@@ -32,12 +30,45 @@ export class DataService {
     });
   }
 
-  // getPhaseGroundTruth(): Observable<string>[] {
-  //   return CONSTANTS.phaseAnnotations.map(filePath => this.http.get(filePath, { responseType: 'text' }))
-  // }
-  //
-  // getInstrumentAnnot(): Observable<string>[] {
-  //   return CONSTANTS.instAnnotations.map(filePath => this.http.get(filePath, { responseType: 'text' }))
-  // }
+  getServerParamFile(): Promise<FileUpload<string>> {
+    const paramFilePath = "/assets/sample_dataset/param.json"
+
+    return new Promise<FileUpload<string>>((res, rej) => {
+      this.http.get('/assets/sample_dataset/param.json', {responseType: 'text'}).subscribe({
+        next: resp => {
+          let result: FileUpload<string> = {
+            name: paramFilePath.split("/").slice(-1)[0],
+            content: resp
+          }
+          res(result);
+        },
+        error: rej
+      });
+    });
+  }
+
+  getServerFiles(): Promise<FileUpload<string>>[] {
+    let spIds = [...Array(80).keys()];
+    spIds = spIds.map(n => n + 1);
+
+    const phaseFiles = spIds.map(num => `/assets/sample_dataset/video${("0" + num).slice(-2)}-phase.txt`);
+    const instFiles = spIds.map(num => `/assets/sample_dataset/video${("0" + num).slice(-2)}-tool.txt`);
+    const allFiles = phaseFiles.concat(instFiles);
+
+    return allFiles.map(filePath => {
+      return new Promise<FileUpload<string>>((res, rej) => {
+        this.http.get(filePath, {responseType: 'text'}).subscribe({
+          next: resp => {
+            let result: FileUpload<string> = {
+              name: filePath.split("/").slice(-1)[0],
+              content: resp
+            }
+            res(result);
+          },
+          error: rej
+        });
+      });
+    });
+  }
 
 }

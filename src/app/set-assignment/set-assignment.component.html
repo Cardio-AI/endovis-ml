@@ -3,26 +3,26 @@
   <p class="view-section-description">Surgeries can be assigned to different splits by dragging and
     dropping. "Unassigned" surgeries are excluded from visualization.</p>
   <div class="controls">
-    <button id="set-assignment-prev"><</button>
+    <button id="set-assignment-prev">&lt;</button>
     <select id="set-assignment-select">
       <option [value]="i" *ngFor="let split of localSplitsCopy; let i = index" [selected]="i == selectedSplit">Split {{i + 1}}</option>
     </select>
-    <button id="set-assignment-next">></button>
+    <button id="set-assignment-next">&gt;</button>
     <button id="reset-selection">Reset selection</button>
 
   </div>
   <div class="view-section-content">
     <div class="dataset-label">
-      <div>Unassigned ({{(localDatasetCopy | datasetFilter : 'unassigned')?.length || 0}})</div>
-      <div>Train ({{(localDatasetCopy | datasetFilter : 'train')?.length || 0}})</div>
-      <div>Validation ({{(localDatasetCopy | datasetFilter : 'validation')?.length || 0}})</div>
-      <div>Test ({{(localDatasetCopy | datasetFilter : 'test')?.length || 0}})</div>
+      <div>Unassigned ({{(localDatasetCopy | datasetFilter : undefined).length}})</div>
+      <div>Train ({{(localDatasetCopy | datasetFilter : 'train').length}})</div>
+      <div>Validation ({{(localDatasetCopy | datasetFilter : 'validation').length}})</div>
+      <div>Test ({{(localDatasetCopy | datasetFilter : 'test').length}})</div>
     </div>
 
     <div class="dataset-content">
       <div class="dataset-column" (dragover)="dragover($event)" (drop)="assignToDataset($event, 'unassigned')">
         <div class="dataset-col-content">
-          <div class="dataset-item" *ngFor="let sp of localDatasetCopy | datasetFilter : 'unassigned'"
+          <div class="dataset-item" *ngFor="let sp of localDatasetCopy | datasetFilter : undefined"
                draggable="true" (dragstart)="dragstart($event, sp)" (dragend)="dragend($event)">
             <div class="dataset-item-name">{{ sp.spName }}</div>
             <div class="dataset-item-duration">{{ sp.parsedData.length | number: '2.'}} frames</div>
@@ -31,7 +31,7 @@
       </div>
       <div class="dataset-column" (dragover)="dragover($event)" (drop)="assignToDataset($event, 'train')">
         <div class="dataset-col-content">
-          <div class="dataset-item"  *ngFor="let sp of localDatasetCopy | datasetFilter : 'train'"
+          <div class="dataset-item" *ngFor="let sp of localDatasetCopy | datasetFilter : 'train'"
                draggable="true" (dragstart)="dragstart($event, sp)" (dragend)="dragend($event)">
             <div class="dataset-item-name">{{ sp.spName }}</div>
             <div class="dataset-item-duration">{{ sp.parsedData.length | number: '2.' }} frames</div>
@@ -40,7 +40,7 @@
       </div>
       <div class="dataset-column" (dragover)="dragover($event)" (drop)="assignToDataset($event, 'validation')">
         <div class="dataset-col-content">
-          <div class="dataset-item"  *ngFor="let sp of localDatasetCopy | datasetFilter : 'validation'"
+          <div class="dataset-item" *ngFor="let sp of localDatasetCopy | datasetFilter : 'validation'"
                draggable="true" (dragstart)="dragstart($event, sp)" (dragend)="dragend($event)">
             <div class="dataset-item-name">{{ sp.spName }}</div>
             <div class="dataset-item-duration">{{ sp.parsedData.length | number: '2.' }} frames</div>
@@ -49,7 +49,7 @@
       </div>
       <div class="dataset-column" (dragover)="dragover($event)" (drop)="assignToDataset($event, 'test')">
         <div class="dataset-col-content">
-          <div class="dataset-item"  *ngFor="let sp of localDatasetCopy | datasetFilter : 'test'"
+          <div class="dataset-item" *ngFor="let sp of localDatasetCopy | datasetFilter : 'test'"
                draggable="true" (dragstart)="dragstart($event, sp)" (dragend)="dragend($event)">
             <div class="dataset-item-name">{{ sp.spName }}</div>
             <div class="dataset-item-duration">{{ sp.parsedData.length | number: '2.' }} frames</div>
