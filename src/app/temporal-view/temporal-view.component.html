@@ -1,0 +1,28 @@
+<div class="view-section temporal-view">
+  <p class="view-section-header">Temporal view</p>
+  <p class="view-section-description">Plot datasets over time.</p>
+  <div class="controls">
+    <label for="temporal-view-select">View:</label>
+    <select id="temporal-view-select">
+      <option value="0">Phases</option>
+      <option value="1">Instruments</option>
+    </select>
+    <label>Temporal scale:</label>
+    <select id="temporal-scale-select">
+      <option value="0">Absolute scale</option>
+      <option value="1">Relative scale</option>
+    </select>
+    <label>Class scale:</label>
+    <select id="temporal-class-scale-select">
+      <option value="0">Individual scale</option>
+      <option value="1">Proportional scale</option>
+    </select>
+  </div>
+  <div class="view-section-content">
+    <svg id="temporal-view-svg" height="100%" width="100%">
+      <g class="stream-axis-g"></g>
+      <g class="stream-chart-g"></g>
+      <g class="stream-label-g"></g>
+    </svg>
+  </div>
+</div>
