@@ -113,9 +113,7 @@ export class DataParserService {
         return result;
       });
 
-    const currSet = trainingSet.has(fileNumber) ?
-      Split.Training : validationSet.has(fileNumber) ?
-        Split.Validation :  testSet.has(fileNumber) ? Split.Test : undefined;
+    const currSet = trainingSet.has(fileNumber) ? Split.Training : validationSet.has(fileNumber) ? Split.Validation :  testSet.has(fileNumber) ? Split.Test : undefined;
 
     const phaseIndex = this.createPhaseIndex(parsedPhases);
 
@@ -124,7 +122,7 @@ export class DataParserService {
     const idleIndex = this.createIdleIndex(parsedInst, parsedPhases[parsedPhases.length - 1].Frame);
     instIndex[idleId] = idleIndex;
 
-    const occIndex = this.createInstOccurrenceIndex(parsedInst, parsedPhases[parsedPhases.length - 1].Frame);
+    const occIndex = this.createInstCooccurrenceIndex(parsedInst, parsedPhases[parsedPhases.length - 1].Frame);
     occIndex.push({object: new Set([idleId]), value: idleIndex})
 
     return {
@@ -163,6 +161,7 @@ export class DataParserService {
         startFrame = phaseAnnotRow.Frame;
         currPhase = phaseAnnotRow.Phase;
       }
+
       currFrame = phaseAnnotRow.Frame;
     })
 
@@ -183,32 +182,39 @@ export class DataParserService {
     CONSTANTS.instrumentMapping.range().forEach(inst => { // for each instrument
       if (inst !== CONSTANTS.idleLabel) {
         const instId = CONSTANTS.instrumentMappingInverse(inst)!;
-
-        // initialize empty array
         result[instId] = []
 
         let startFrame = -1;
         let currFrame = -1;
         let prevFrame = -1;
-
         instAnnot.forEach(row => { // for each row
           currFrame = row[CONSTANTS.columnNames.frame];
 
           if (startFrame === -1 && row[inst] === 1) { // first frame
             startFrame = currFrame;
-          } else if (startFrame !== -1 && row[inst] === 0) { // last frame
-            result[instId].push({start: startFrame, end: prevFrame});
-            startFrame = -1;
+          } else if (startFrame !== -1) {
+            if (currFrame - prevFrame > CONSTANTS.instFrameStep) { // this check is only necessary because of heico data
+              result[instId].push({
+                start: startFrame,
+                end: Math.min(prevFrame + CONSTANTS.instFrameStep - 1, lastFrameNr)
+              });
+              startFrame = -1;
+            } else if (row[inst] === 0) { // last frame
+              result[instId].push({start: startFrame, end: currFrame - 1});
+              startFrame = -1;
+            }
           }
           prevFrame = currFrame;
         });
 
         // flush remaining data
         if (startFrame !== -1) {
-          result[instId].push({start: startFrame, end: lastFrameNr}); // TODO: is lastFrameNr necessary?
+          result[instId].push({start: startFrame, end: lastFrameNr});
+          startFrame = -1;
         }
       }
     });
+
     return result;
   }
 
@@ -217,18 +223,21 @@ export class DataParserService {
 
     let startFrame = -1;
     let currFrame = -1;
-    let prevFrame = -1;
+    let prevFrame = 0 - CONSTANTS.instFrameStep; // offset to detect annotations that don't start with 0
 
-    instAnnot.forEach(row => { // for each row
+    instAnnot.forEach(row => {
       currFrame = row[CONSTANTS.columnNames.frame];
-      const currRowSum = CONSTANTS.instrumentMapping.range()
-        .filter(r => r !== CONSTANTS.idleLabel)
-        .reduce((p, c) => p + row[c], 0);
+      const currRowNotNull = CONSTANTS.instrumentMapping.range().filter(e => e !== CONSTANTS.columnNames.frame).filter(u => row[u] > 0);
 
-      if (startFrame === -1 && currRowSum === 0) { // first frame
+      if (startFrame === -1 && currFrame - prevFrame > CONSTANTS.instFrameStep) { // this check is only necessary because of heico data
+        startFrame = Math.min(prevFrame + CONSTANTS.instFrameStep, lastFrameNr);
+      }
+
+      if (startFrame === -1 && currRowNotNull.length === 0) { // idle section
         startFrame = currFrame;
-      } else if (startFrame !== -1 && currRowSum > 0) { // instrument now present
-        result.push({start: startFrame, end: prevFrame});
+      } else if (startFrame !== -1 && currRowNotNull.length > 0) { // instrument now present
+
+        result.push({start: startFrame, end: currFrame - 1});
         startFrame = -1;
       }
       prevFrame = currFrame;
@@ -236,20 +245,18 @@ export class DataParserService {
 
     // flush remaining data
     if (startFrame !== -1) {
-      result.push({start: startFrame, end: lastFrameNr}); // TODO: is lastFrameNr necessary?
+      result.push({start: startFrame, end: lastFrameNr});
+      startFrame = -1;
     }
 
-    console.log(result)
     return result;
   }
 
-  private createInstOccurrenceIndex(instAnnot: Record<string, number>[], lastFrameNr: number): DataCounterNew<Set<string>, Occurrence[]>[] {
+  private createInstCooccurrenceIndex(instAnnot: Record<string, number>[], lastFrameNr: number): DataCounterNew<Set<string>, Occurrence[]>[] {
     let result: DataCounterNew<Set<string>, Occurrence[]>[] = [];
-    let prevFrame = -1;
 
     instAnnot.forEach(frame => { // for each frame
       let occurrenceSet = new Set<string>();
-      let currFrame = frame[CONSTANTS.columnNames.frame];
 
       CONSTANTS.instrumentMapping.range().forEach(inst => { // for each instrument
         let instId = CONSTANTS.instrumentMappingInverse(inst);
@@ -262,13 +269,13 @@ export class DataParserService {
       if (occurrenceSet.size > 0) { // single instruments are also counted
         let resultEntry = result.find(e => SetMethods.setEquality(e.object, occurrenceSet));
         let currOcc = {
-          start: currFrame,
-          end: Math.min(frame[CONSTANTS.columnNames.frame], lastFrameNr) // TODO: is lastFrameNr necessary?
+          start: frame[CONSTANTS.columnNames.frame],
+          end: Math.min(frame[CONSTANTS.columnNames.frame] + CONSTANTS.instFrameStep - 1, lastFrameNr)
         };
 
         if (resultEntry !== undefined) { // occurrence already present in the result object
 
-          let prevOcc = resultEntry.value.find(e => e.end === prevFrame);
+          let prevOcc = resultEntry.value.find(e => e.end + 1 === currOcc.start);
 
           if (prevOcc !== undefined) { // subsequent occurrence
             prevOcc.end = currOcc.end; // extend previous occurrence object
@@ -282,7 +289,6 @@ export class DataParserService {
           });
         }
       }
-      prevFrame = currFrame;
     });
 
     return result;

@@ -181,6 +181,7 @@ export class GraphViewComponent implements OnInit {
 
     // draw transitions
     let maxNrTransitions = d3.max(this.transitions.flatMap(t => d3.sum(t.value.map(e => e.value)))) || 0;
+    console.log(maxNrTransitions);
 
     let transitionScale = d3.scaleLinear()
       .domain([0, maxNrTransitions])

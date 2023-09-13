@@ -10,6 +10,7 @@ export class FileDropDirective {
   constructor() { }
 
   @HostListener('click', ['$event']) click(e: MouseEvent) {
+    console.log('Click')
     // this.el.nativeElement.innerHTML.
   }
 

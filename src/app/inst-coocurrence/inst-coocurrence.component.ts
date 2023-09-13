@@ -233,6 +233,9 @@ export class InstCoocurrenceComponent implements OnInit {
 
     // create a group for each co-occurrence
     let selectedData = this.occurrenceToBarchartData(this.selectedCooccurrences);
+    // console.log(this.localDatasetCopy)
+    // console.log(singleOccurrences)
+    // console.log(selectedData)
 
     let selectedInstG = d3.select('.instrument-selected-nodes-g')
       .selectAll<SVGSVGElement, DataCounter<DataCounter<number>[]>>('.instrument-selected-node-g')
@@ -337,6 +340,7 @@ export class InstCoocurrenceComponent implements OnInit {
       }).attr('opacity', d => this.highlightOpacity(d.value));
 
 
+    console.log('update')
     // apply force simulation
     d3.forceSimulation<InstCooccurrenceNode<Set<string>, DataCounterNew<string, number>[]>>(instCooccurrNodes)
       .force('radial', d3.forceRadial<InstCooccurrenceNode<Set<string>, DataCounterNew<string, number>[]>>(radius / 2).strength(0.01))
@@ -396,7 +400,6 @@ export class InstCoocurrenceComponent implements OnInit {
     return result;
   }
 
-  // TODO: why not use instIndex?
   private occurrenceToBarchartData(cooccurrData: DataCounterNew<Set<string>, DataCounterNew<string, number>[]>[]): DataCounter<DataCounter<number>[]>[] {
     let result: DataCounter<DataCounter<number>[]>[] = [];
 
@@ -410,6 +413,7 @@ export class InstCoocurrenceComponent implements OnInit {
     iterObj.forEach(instId => { // for each instrument
       let dataCounter: DataCounter<number>[] = [];
 
+      let instPresent = false;
       CONSTANTS.datasets.forEach(set => { // for each dataset
         const data = cooccurrData.filter(e => e.object.has(instId)); // get all co-occurrences that contain this instruments
 
@@ -427,6 +431,65 @@ export class InstCoocurrenceComponent implements OnInit {
     return result;
   }
 
+  private findCooccurrences(): DataCounterSelection<Set<string>, DataCounterNew<string, number>[]>[] {
+    let result: DataCounterSelection<Set<string>, DataCounterNew<string, number>[]>[] = [];
+
+    // let dataset = this.localDatasetCopy.filter(e => e.set !== 'unassigned');
+
+    let idCounter = 0;
+    this.localDatasetCopy.forEach(sp => { // for each surgery
+      sp.instData.forEach(frame => { // for each frame
+        let frameOn = new Set<string>();
+        CONSTANTS.instrumentMapping.range().forEach(inst => { // for each instrument
+          let instId = CONSTANTS.instrumentMappingInverse(inst);
+          let instValue = frame[inst];
+          if (instValue === 1) {
+            frameOn.add(instId);
+          }
+        });
+        if (frameOn.size > 0) {
+          let resultEntry = result.find(e => this.setEquality(e.object, frameOn));
+          let currOcc = {start: frame['Frame'], end: frame['Frame'] + CONSTANTS.instFrameStep}
+
+          if (resultEntry !== undefined) { // occurrence already present in the result object
+            let setEntry = resultEntry.value.find(e => e.object === sp.set);
+            if (setEntry !== undefined) {
+              setEntry.value += CONSTANTS.instFrameStep; // increment frame counter
+            }
+
+            // fixme: temporary solution of selections
+            // is the sp already in the occurrence object
+            let spOcc = resultEntry.originalData.find(e => e.object === sp.spNr);
+
+
+            if (spOcc === undefined) { // first occurrence of this sp
+              resultEntry.originalData.push({
+                object: sp.spNr,
+                value: [currOcc]
+              });
+            } else {
+              // merge?
+              let prevOcc = spOcc.value.find(e => e.end === currOcc.start);
+              if (prevOcc === undefined) { // independent occurrence
+                spOcc.value.push(currOcc);
+              } else { // merge
+                prevOcc.end = currOcc.end;
+              }
+            }
+          } else { // first occurrence
+            let setEntries = CONSTANTS.datasets.map(d => {
+              return {object: d, value: d === sp.set ? CONSTANTS.instFrameStep : 0}
+            });
+
+            result.push({id: idCounter, object: frameOn, value: setEntries, originalData: [{object: sp.spNr, value: [currOcc]}]});
+            idCounter++;
+          }
+        }
+      });
+    });
+    return result;
+  }
+
   /**
    * Convert data to the format that is used in this view
    * @private
@@ -435,9 +498,9 @@ export class InstCoocurrenceComponent implements OnInit {
     let result: DataCounterSelection<Set<string>, DataCounterNew<string, number>[]>[] = [];
 
     let idCounter = 0;
-    this.localDatasetCopy.forEach(sp => { // for each surgery
+    this.localDatasetCopy.forEach(sp => {
       sp.occIndex.forEach(cooccurr => { // for each co-occurrence
-        let resEntry = result.find(e => SetMethods.setEquality(e.object, cooccurr.object));
+        let resEntry = result.find(e => SetMethods.setEquality(e.object, cooccurr.object))
         if (resEntry !== undefined) {
           let setEntry = resEntry.value.find(e => e.object === sp.set)!;
           cooccurr.value.forEach(occ => {
@@ -465,6 +528,15 @@ export class InstCoocurrenceComponent implements OnInit {
 
     });
     return result;
+  }
+
+  private setEquality(set1: Set<string>, set2: Set<string>) {
+    return set1.size === set2.size &&
+      [...set1].every((x) => set2.has(x));
+  }
+
+  private setIntersection(set1: Set<string>, set2: Set<string>) {
+    return new Set([...set1].filter((x) => set2.has(x)));
   }
 
   private calcPolygonCenter(points: [number, number][]) {
@@ -509,6 +581,12 @@ export class InstCoocurrenceComponent implements OnInit {
   }
 
   private pointsToPolygon(points: [number, number][]): [number, number][] {
+    // points.push([0, 0]);
+    // if(points.length == 2) {
+    //   debugger
+    //   points.push([(points[0][0] + points[1][0]) / 2, (points[0][1] + points[1][1]) / 2]);
+    //   // points.push([points[0][0], points[0][1] + 0.001])
+    // }
     let result = d3.polygonHull(points);
     if(result !== null) {
       return result;
