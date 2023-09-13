@@ -195,7 +195,7 @@ export class SetOverviewComponent implements OnInit {
 
     d3.select('.files-bar-chart-g')
       .selectAll('.files-bar-chart-label')
-      .data(['No. of surgeries'])
+      .data(['No. of files'])
       .join(
         enter => enter.append('text')
           .attr('class', 'files-bar-chart-label')
@@ -228,6 +228,7 @@ export class SetOverviewComponent implements OnInit {
       .transition()
       .duration(1000)
       .attr('width', d => framesBarChartXScale(d.value));
+
 
     // number of frames per set (selection)
     d3.select('.frames-bar-chart-g')

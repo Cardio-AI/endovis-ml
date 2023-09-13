@@ -1,4 +1,4 @@
 export interface CrossValSplit {
-  train: number[];
-  validation: number[];
+  train: Set<number>;
+  validation: Set<number>;
 }

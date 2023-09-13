@@ -9,9 +9,9 @@ import {SetMethods} from "../util/SetMethods";
 import {FileUpload} from "../model/FileUpload";
 import {ParamFile} from "../model/ParamFile";
 import {Delimiter} from "../enums/Delimiter";
+import {Split} from "../enums/Split";
 import {InstAnnotationRow} from "../model/InstAnnotationRow";
 import {AnnotationRow} from "../model/AnnotationRow";
-import {LabelDataService} from "./label-data.service";
 
 
 @Injectable({
@@ -19,24 +19,11 @@ import {LabelDataService} from "./label-data.service";
 })
 export class DataParserService {
 
-  constructor(private labelDataService: LabelDataService) {}
-
-  // crossValListToSet(crossValList: Record<string, number[]>[]) {
-  //   return crossValList.map(split => {
-  //     return {
-  //       train: new Set(split[0]),
-  //       validation: new Set(split[1]),
-  //     }
-  //   });
-  // }
+  constructor() {
+  }
 
   parseParamFile(file: FileUpload<string>) {
-    let res = JSON.parse(file.content) as ParamFile;
-    if(res) {
-      return res;
-    } else {
-      throw new Error("Provided param.json file is not valid")
-    }
+    return JSON.parse(file.content) as ParamFile;
   }
 
   splitString(str: string): string[] {
@@ -88,7 +75,7 @@ export class DataParserService {
     return matches;
   }
 
-  parseData(phaseFile: FileUpload<string>, instFile: FileUpload<string>, phaseId: string, delimiter: Delimiter): SurgeryData {
+  parseData(phaseFile: FileUpload<string>, instFile: FileUpload<string>, phaseId: string, delimiter: Delimiter, instLabels:string[], trainingSet: Set<number>, validationSet: Set<number>, testSet:Set<number>): SurgeryData {
     const surgeryName: string = this.filenameToSurgeryName(phaseFile.name, phaseId);
     const fileNumber: number = this.surgeryNameToSurgeryId(surgeryName);
 
@@ -118,7 +105,7 @@ export class DataParserService {
 
         let result: InstAnnotationRow = {Frame: parseInt(frame)};
 
-        this.labelDataService.instLabels.forEach((key: string) => {
+        instLabels.forEach((key: string) => {
           let value = row[key];
 
           if (!value || isNaN(parseInt(value))) {
@@ -132,7 +119,12 @@ export class DataParserService {
       });
 
     // unify phase and instrument annotations in one object
-    const unifiedData = this.unifyFiles(surgeryName, parsedPhases, parsedInst);
+    const unifiedData = this.unifyFiles(parsedPhases, parsedInst, instLabels);
+
+    // initial assignment to sets
+    const currSet = trainingSet.has(fileNumber) ?
+      Split.Training : validationSet.has(fileNumber) ?
+        Split.Validation :  testSet.has(fileNumber) ? Split.Test : undefined;
 
     const phaseIndex = this.createPhaseIndex(unifiedData);
 
@@ -152,7 +144,7 @@ export class DataParserService {
       phaseIndex: phaseIndex,
       instIndex: instIndex,
       occIndex: occIndex,
-      set: undefined,
+      set: currSet,
       // set: CONSTANTS.datasets[Math.floor(Math.random() * CONSTANTS.datasets.length)],
     };
   }
@@ -163,14 +155,12 @@ export class DataParserService {
 
     CONSTANTS.phaseMapping.domain().forEach((phaseId: string) => result[phaseId] = [])
 
-    console.log(result)
-
     let startFrame = -1;
     let currPhase = -1;
     let prevFrame = -1;
 
     phaseAnnot.forEach(phaseAnnotRow => { // for each frame
-      if (currPhase === -1) { // first frame
+      if (phaseAnnotRow.Frame === 0) { // first frame
         startFrame = phaseAnnotRow.Frame;
         currPhase = phaseAnnotRow.Phase;
       } else if (phaseAnnotRow.Phase !== currPhase) { // phase changed
@@ -303,9 +293,8 @@ export class DataParserService {
     return result;
   }
 
-  private unifyFiles(surgeryName: string, phaseData: PhaseAnnotationRow[], instData: InstAnnotationRow[]) {
+  private unifyFiles(phaseData: PhaseAnnotationRow[], instData: InstAnnotationRow[], instLabels: string[]) {
     let result: AnnotationRow[]= [];
-    let nrSkippedRows = 0;
 
     phaseData.forEach(phaseRow => { // for each row
       let unifiedRow: AnnotationRow = {Frame: phaseRow.Frame, Phase: phaseRow.Phase};
@@ -313,18 +302,14 @@ export class DataParserService {
       let instRow = instData.find(instRow => instRow.Frame === phaseRow.Frame);
 
       if (instRow) {
-        for (let label of this.labelDataService.instLabels) {
+        for (let label of instLabels) {
           unifiedRow[label] = instRow[label];
         }
         result.push(unifiedRow);
       } else {
-        nrSkippedRows++;
+        console.warn(`Skipping unannotated row`)
       }
     });
-
-    if (nrSkippedRows > 0) {
-      console.warn(`Skipped ${nrSkippedRows} not fully annotated rows in surgery ${surgeryName}`);
-    }
     return result;
   }
 

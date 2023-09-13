@@ -13,7 +13,7 @@ import {Split} from "../enums/Split";
 export class SetAssignmentComponent implements OnInit {
 
   localDatasetCopy: SurgeryData[] = [];
-  private selection: SurgeryData[] = [];
+  private selection: SurgeryData[] = []
 
   selectedSplit = 0;
 
@@ -24,12 +24,12 @@ export class SetAssignmentComponent implements OnInit {
 
   ngOnInit(): void {
     this.localDatasetCopy = this.dataForwardService.dataset;
-    this.assignData();
     this.dataSharingService.updateDataset(this.localDatasetCopy.filter(s => s.set))
 
     d3.select('#reset-selection').on('click', e => {
       this.assignData();
       this.dataSharingService.updateDataset(this.localDatasetCopy);
+      // this.dataSharingService.updateSelection([]);
     });
 
     d3.select('#set-assignment-select').on('change', e => {
@@ -85,9 +85,9 @@ export class SetAssignmentComponent implements OnInit {
 
   private assignData() {
     this.localDatasetCopy.forEach(sp => {
-      sp.set = this.dataForwardService.crossValSplits[this.selectedSplit][Split.Training].includes(sp.spNr) ?
-        Split.Training : this.dataForwardService.crossValSplits[this.selectedSplit][Split.Validation].includes(sp.spNr) ?
-          Split.Validation : this.dataForwardService.testSet.includes(sp.spNr) ? Split.Test : undefined;
+      sp.set = this.dataForwardService.crossValSplits[this.selectedSplit][Split.Training].has(sp.spNr) ?
+        Split.Training : this.dataForwardService.crossValSplits[this.selectedSplit][Split.Validation].has(sp.spNr) ?
+          Split.Validation : this.dataForwardService.testSet.has(sp.spNr) ? Split.Test : undefined;
     });
     this.localDatasetCopy = [...this.localDatasetCopy]; // necessary for angular to detect changes
   }

@@ -24,8 +24,4 @@ export class AppComponent {
     this.menuToggled = !this.menuToggled;
   }
 
-  closeMenu() {
-    this.menuToggled = false;
-  }
-
 }

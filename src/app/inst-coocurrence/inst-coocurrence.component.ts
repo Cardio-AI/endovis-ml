@@ -23,9 +23,6 @@ export class InstCoocurrenceComponent implements OnInit {
   private svgHeight = 0;
   private svgWidth = 0;
   private localDatasetCopy: SurgeryData[] = [];
-  private allInstCooccurrences: DataCounterSelection<Set<string>, DataCounterNew<string, number>[]>[] = [];
-  private allInstOccurrences: DataCounter<DataCounter<number>[]>[] = [];
-
   private globalSelection: DataCounterSelection<Set<string>, DataCounterNew<string, number>[]>[] = [];
 
   private individualScales = false;
@@ -66,24 +63,17 @@ export class InstCoocurrenceComponent implements OnInit {
       this.drawGraph();
     });
 
-    // get dataset from the set-overview component
+
     this.dataSharingService.dataset$.subscribe(dataset => {
       this.localDatasetCopy = dataset;
 
-      const allOccurrences = this.getAllOccurrences();
-      this.allInstCooccurrences = allOccurrences.filter(e => e.object.size > 1);
-      console.log(allOccurrences)
-      console.log(this.allInstCooccurrences)
-      this.allInstOccurrences = this.occurrenceToBarchartData(allOccurrences);
-
-      // reset all selections when the dataset is updated
       this.clickedInst = [];
       this.selectedCooccurrences = [];
       this.globalSelection = [];
       this.drawGraph();
     });
 
-    // get phase selections
+
     this.phaseSelectionService.selection$.subscribe(selection => {
       this.selectedCooccurrences = []; // remove all local selections
       this.clickedInst = [];
@@ -93,10 +83,10 @@ export class InstCoocurrenceComponent implements OnInit {
   }
 
   private drawGraph() {
-    const barChartHeight = 35;
+    const barChartHeight = 40;
     const chartPadding = 60;
     const radius = this.svgWidth / 2.22 - barChartHeight - chartPadding;
-    const nodeRadius = 10;
+    const nodeRadius = 12;
 
     // get all necessary data
     const allOccurrences = this.globalSelection.length > 0 ? this.globalSelection : this.getAllOccurrences(); // take global selection if present, default dataset otherwise
@@ -132,9 +122,21 @@ export class InstCoocurrenceComponent implements OnInit {
       .attr('y1', (_, i) => this.instIdxToYCoord(i, angle, radius))
       .attr('y2', (_, i) => this.instIdxToYCoord(i + 1, angle, radius));
 
-    // barcharts
-    const barMargin = 0;
-    const maxBarWidth = radius * 2 * Math.cos((Math.PI - angle) / 2) - barMargin; // fixme: this formula is not correct
+    // d3.select('.instrument-nodes-g')
+    //   .selectAll('.instrument-line')
+    //   .data(data)
+    //   .join(
+    //     enter => enter.append('circle')
+    //       .attr('class', 'instrument-line')
+    //       // .attr('stroke', 'lightgray')
+    //       .attr('r', 2)
+    //       .attr('fill', 'gray')
+    //   ).attr('cx', (_, i) => Math.sin(Math.PI + (angle * i)) * radius)
+    //   .attr('cy', (_, i) => Math.cos(Math.PI + (angle * i)) * radius)
+
+    // draw edge barcharts
+    const barMargin = 5;
+    const maxBarWidth = radius * 2 * Math.cos((Math.PI - angle) / 2) - barMargin;
 
     const setBarYScale = d3.scaleBand()
       .domain(CONSTANTS.datasets)

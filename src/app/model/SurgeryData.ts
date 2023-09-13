@@ -6,6 +6,8 @@ export interface SurgeryData {
   spNr: number;
   spName: string;
 
+  // phaseData: PhaseAnnotationRow[]; // csv row
+  // instData: InstAnnotationRow[]; //csv rows
   parsedData: AnnotationRow[]; // csv rows
 
   phaseIndex: Record<string, Occurrence[]>; // TODO: use DataCounterNew instead?

@@ -1,4 +1,4 @@
-import {Directive, EventEmitter, HostBinding, HostListener, Output} from '@angular/core';
+import {Directive, HostBinding, HostListener} from '@angular/core';
 
 @Directive({
   selector: '[appFileDrop]'
@@ -6,7 +6,6 @@ import {Directive, EventEmitter, HostBinding, HostListener, Output} from '@angul
 export class FileDropDirective {
 
   @HostBinding('class.upload-dialog-form-files-dragging') active = false;
-  @Output() dataSelected: EventEmitter<FileList> = new EventEmitter<FileList>();
 
   constructor() { }
 
@@ -31,10 +30,9 @@ export class FileDropDirective {
 
   @HostListener('drop', ['$event']) onDrop(e: DragEvent) {
     e.preventDefault();
-
-    let selectedFiles = e.dataTransfer?.files;
-
-    console.log(selectedFiles)
     this.active = false;
   }
+
+  // (dragenter)="dragenter($event)" (dragover)="dragover($event)" (dragleave)="dragleave($event)" (drop)="drop($event)"
+
 }

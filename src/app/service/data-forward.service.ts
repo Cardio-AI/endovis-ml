@@ -11,7 +11,7 @@ export class DataForwardService {
 
   dataset: SurgeryData[] = [];
   crossValSplits: CrossValSplit[] = [];
-  testSet: number[] = [];
+  testSet: Set<number> = new Set<number>();
 
   constructor() { }
 }

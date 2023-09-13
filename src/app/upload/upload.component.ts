@@ -7,8 +7,6 @@ import {Split} from "../enums/Split";
 import {Router} from "@angular/router";
 import {DataForwardService} from "../service/data-forward.service";
 import {FormDataService} from "../service/form-data.service";
-import {LabelDataService} from "../service/label-data.service";
-import {CrossValSplit} from "../model/CrossValSplit";
 
 @Component({
   selector: 'app-upload',
@@ -18,14 +16,7 @@ import {CrossValSplit} from "../model/CrossValSplit";
 export class UploadComponent implements OnInit {
 
   allDelimiters = Object.values(Delimiter);
-  processing = false;
-
-  constructor(private formDataService: FormDataService,
-              private dataService: DataService,
-              private labelDataService: LabelDataService,
-              private dataParserService: DataParserService,
-              private router: Router,
-              private dataForwardService: DataForwardService) {
+  constructor(private formDataService: FormDataService, private dataService: DataService, private dataParserService: DataParserService, private router: Router, private dataForwardService: DataForwardService) {
   }
 
   ngOnInit(): void {
@@ -40,7 +31,9 @@ export class UploadComponent implements OnInit {
     if (fileList) {
       this.selectedFiles = Array.from(fileList);
 
-      const promises = this.dataService.getLocalFiles(this.selectedFiles);
+      const promises = this.dataService.readLocalFiles(this.selectedFiles);
+
+      // Promise.all(promises).then(() => this.processFiles())
 
       promises.forEach((promise: Promise<FileUpload<string>>) => {
         promise.then((file: FileUpload<string>) => {
@@ -58,17 +51,21 @@ export class UploadComponent implements OnInit {
   private processParamFile(file: FileUpload<string>) {
     const parsedParamFile = this.dataParserService.parseParamFile(file);
 
-    this.delimiter = parsedParamFile.delimiter;
-    this.phaseId = parsedParamFile.phaseId;
-    this.instId = parsedParamFile.instId;
-    this.phaseLabels = parsedParamFile.phaseLabels.toString();
-    this.instLabels = parsedParamFile.instLabels.toString();
-    this.crossValSplit = parsedParamFile.crossValSplits;
-    this.testSet = parsedParamFile.testSplit;
+      if(parsedParamFile) {
+        this.delimiter = parsedParamFile.separator;
+        this.phaseId = parsedParamFile.phaseId;
+        this.instId = parsedParamFile.instId;
+        this.phaseLabels = parsedParamFile.phaseLabels.toString();
+        this.instLabels = parsedParamFile.instLabels.toString();
+        this.crossValSplit = parsedParamFile.splits.map(split => [split[Split.Training], split[Split.Validation]])
+        this.testSet = parsedParamFile.testSplit;
+      } else {
+        throw new Error("Provided param.json file is not valid")
+      }
   }
 
   addSplit() {
-    this.crossValSplit.push({train: [], validation: []}); // add empty row
+    this.crossValSplit.push([]);
   }
 
   removeSplit() {
@@ -78,29 +75,29 @@ export class UploadComponent implements OnInit {
   }
 
   processFiles() {
-    this.processing = true;
+    // match phase and instrument files
+    const fileMatches = this.dataParserService.matchPhaseAndInstFiles(this.uploadedFiles, this.phaseId, this.instId);
 
-    new Promise(() => {
+    // parse
+    const phaseLabelsArray = this.dataParserService.splitString(this.phaseLabels);
+    const instLabelsArray = this.dataParserService.splitString(this.instLabels);
 
-      // match phase and instrument files
-      const fileMatches = this.dataParserService.matchPhaseAndInstFiles(this.uploadedFiles, this.phaseId, this.instId);
-
-      // parse
-      this.labelDataService.phaseLabels = this.dataParserService.splitString(this.phaseLabels)
-      this.labelDataService.instLabels = this.dataParserService.splitString(this.instLabels);
-
-      let dataset = fileMatches.map(([phaseFile, instFile]) => {
-        return this.dataParserService.parseData(phaseFile, instFile, this.phaseId, this.delimiter);
-      });
-
-      this.dataForwardService.dataset = dataset.sort((a,b) => a.spNr - b.spNr);
-      this.dataForwardService.crossValSplits = this.crossValSplit;
-      this.dataForwardService.testSet = this.testSet;
-
-      // go to the train-val component
-      this.router.navigate(['/train-test']);
+    let dataset = fileMatches.map(([phaseFile, instFile]) => {
+      return this.dataParserService.parseData(phaseFile, instFile, this.phaseId, this.delimiter, instLabelsArray, new Set(this.crossValSplit[0][0]), new Set(this.crossValSplit[0][1]), new Set(this.testSet));
     });
-    console.log('Hello')
+
+    // go to train-val
+    this.dataForwardService.dataset = dataset;
+    this.dataForwardService.crossValSplits = this.crossValSplit.map((split, i) => {
+      return {
+        train: new Set(split[0]),
+        validation: new Set(split[1]),
+      }
+    });
+
+    this.dataForwardService.testSet = new Set(this.testSet);
+
+    this.router.navigate(['/train-test']);
   }
 
   // get and set methods
@@ -160,21 +157,20 @@ export class UploadComponent implements OnInit {
     this.formDataService.instLabels = value;
   }
 
-  get crossValSplit(): CrossValSplit[] {
+  get crossValSplit(): number[][][] {
     return this.formDataService.crossValSplit;
   }
 
-  set crossValSplit(value: CrossValSplit[]) {
+  set crossValSplit(value: number[][][]) {
     this.formDataService.crossValSplit = value;
   }
 
   get testSet(): number[] {
-    return this.formDataService.testSplit;
+    return this.formDataService.testSet;
   }
 
   set testSet(value: number[]) {
-    this.formDataService.testSplit = value;
+    this.formDataService.testSet = value;
   }
 
-  protected readonly Split = Split;
 }

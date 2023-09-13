@@ -4,21 +4,14 @@
   border-radius: 4px;
   border: none;
   color: white;
-  display: flex;
-  justify-content: center;
-  /*text-align: center;*/
+  text-align: center;
   text-decoration: none;
   cursor: pointer;
   user-select: none;
 }
 
-.button:hover:not([disabled]) {
+.button:hover {
   opacity: 0.9;
-}
-
-.button:disabled {
-  opacity: 0.7;
-  cursor: default;
 }
 
 .button-large {
@@ -34,6 +27,5 @@
 }
 
 .button-small {
-  font-size: 9pt;
-  padding: 2px 4px;
+  font-size: 7px;
 }

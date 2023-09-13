@@ -22,9 +22,10 @@ export class GraphViewComponent implements OnInit {
   private svgHeight = 0;
   private svgWidth = 0;
 
-  private viewTransitionSets = false;
+  private scaleType = 0;
   private instScaleType = 0;
 
+  private viewTransitionSets = false;
   private localDatasetCopy: SurgeryData[] = [];
   private localPhaseSelection: DataCounterSelection<string, DataCounterNew<string, number>[]>[] = [];
   private globalPhaseSelection: DataCounterSelection<string, DataCounterNew<string, number>[]>[] = [];
@@ -45,18 +46,16 @@ export class GraphViewComponent implements OnInit {
     // @ts-ignore
     this.svgHeight = d3.select('#graph-view-svg').node().getBoundingClientRect().height;
 
-    // get dataset from the set-overview component
     this.dataSharingService.dataset$.subscribe(dataset => {
       this.localDatasetCopy = dataset;
-
-      // convert dataset
       let dataAsSelection = this.dataToSelection();
       this.allPhaseData = this.selectionToPhaseOccurrences(dataAsSelection);
       this.allInstrumentData = this.selectionToInstrumentData(dataAsSelection);
       this.transitions = this.getTransitions(dataAsSelection);
 
-      // reset all selections when the dataset is updated
+      // reset all selections
       this.localPhaseSelection = [];
+
       this.globalPhaseSelection = this.selectionToPhaseOccurrences([]);
       this.globalInstrumentSelection = this.selectionToInstrumentData([]);
 
@@ -64,19 +63,31 @@ export class GraphViewComponent implements OnInit {
     });
 
 
-    // get instrument selections
     this.instrumentSelectionService.selection$.subscribe(selection => {
+        this.localPhaseSelection = [];
+        this.globalPhaseSelection = this.selectionToPhaseOccurrences(selection);
+        this.globalInstrumentSelection = this.selectionToInstrumentData(selection);
 
-      this.localPhaseSelection = [];
-      this.globalPhaseSelection = this.selectionToPhaseOccurrences(selection);
-      this.globalInstrumentSelection = this.selectionToInstrumentData(selection);
-
-      if (selection.length > 0) {
+      if(selection.length > 0) {
         this.transitions = []; // do not show transitions when selection is applied
       } else {
-        this.transitions = this.getTransitions(this.dataToSelection());
+        this.transitions = this.getTransitions(this.dataToSelection())
       }
+      // } else {
+      //
+      //   this.globalPhaseSelection = this.selectionToPhaseOccurrences([]);
+      //   this.globalInstrumentSelection = this.selectionToInstrumentData([]);
+      //   this.transitions = this.getTransitions(this.dataToSelection());
+      //
+      // }
 
+
+
+      this.drawGraph();
+    });
+
+    d3.select('#graph-view-scale-select').on('change', e => {
+      this.scaleType = +d3.select(e.currentTarget).property('value');
       this.drawGraph();
     });
 
@@ -213,6 +224,22 @@ export class GraphViewComponent implements OnInit {
           1, endX, ',', yGraphCenter] // sweep-flag, x, y
           .join(' ')
       }).attr('stroke-width', d => transitionScale(d3.sum(d.value.map(e => e.value))));
+
+    // draw transition sets
+    // let setTransitionCounter: DataCounter<Transition, DataCounterNew<string, number>[]>[] = transitionData.map(tr => {
+    //   let counter: DataCounterNew<string, number>[] = CONSTANTS.datasets.map(set => ({object: set, value: 0}));
+    //
+    //   tr.sps.forEach(sp => { // for each sp
+    //     let currSet = this.localDatasetCopy.find(t => t.spNr === sp)!.set;
+    //
+    //     counter.find(e => e.object === currSet)!.value += 1;
+    //   });
+    //
+    //   return {
+    //     object: tr,
+    //     value: counter
+    //   }
+    // });
 
     const transitionPieGen = d3.pie<DataCounterNew<string, number>>()
       .value(d => d.value)

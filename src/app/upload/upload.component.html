@@ -21,22 +21,28 @@
     </p>
 
     <input type="file" id="file-upload" (input)="readFiles($event)" multiple #fileUpload>
-    <label for="file-upload">
-      <div class="upload-area" appFileDrop>
-        <div id="upload-status">
-          <ng-container *ngIf="uploadedFiles.length; else notUploaded">
-            <span>{{uploadedFiles.length + " files uploaded"}}</span>
-            <ng-container *ngIf="uploadedFiles.length < selectedFiles.length">
-              <progress id="upload-progress" [value]="uploadedFiles.length" [max]="selectedFiles.length"></progress>
+      <label for="file-upload">
+        <div class="upload-area" appFileDrop>
+          <div id="upload-status">
+            <ng-container *ngIf="uploadedFiles.length; else notUploaded">
+              <span>{{uploadedFiles.length + " files uploaded"}}</span>
+              <ng-container *ngIf="uploadedFiles.length < selectedFiles.length; else uploadSuccess">
+                <progress id="upload-progress" [value]="uploadedFiles.length" [max]="selectedFiles.length"></progress>
+              </ng-container>
             </ng-container>
-          </ng-container>
 
-          <ng-template #notUploaded>
-            <span>Drag and drop files or click to browse</span>
-          </ng-template>
+            <ng-template #notUploaded>
+              <span>Drag and drop files or click to browse</span>
+            </ng-template>
+
+            <ng-template #uploadSuccess>
+              <div style="font-size: 18px">&#9989;</div>
+            </ng-template>
+          </div>
+
         </div>
-      </div>
-    </label>
+      </label>
+
 
     <div class="form-element form-input-element">
       <label class="input-label" for="delimiter">Value delimiter</label>
@@ -46,82 +52,70 @@
       </select>
     </div>
 
-    <div class="form-element form-input-element">
-      <label class="input-label" for="phase-id">Phase file identifier</label>
-      <p class="input-description">Define the <i>phase file identifier</i>. It represents a substring of the filename
-        that is specific for phase annotation files. See the example above.</p>
-      <input type="text" class="input-text" id="phase-id" placeholder="Example: phase" [(ngModel)]="phaseId" required minlength="1">
-    </div>
-
-    <div class="form-element form-input-element">
-      <label class="input-label" for="inst-id">Instrument file identifier</label>
-      <p class="input-description">Define the <i>instrument file identifier</i>. It represents a substring of the filename
-        that is specific for instrument annotation files. See the example above.</p>
-      <input type="text" class="input-text" id="inst-id" placeholder="Example: inst" [(ngModel)]="instId" required minlength="1">
-    </div>
-
-    <div class="form-element form-input-element">
-      <label class="input-label" for="phase-labels">Phase labels</label>
-      <p class="input-description">Provide a comma-separated list of names of all surgical phases that are present in
-        the dataset. Note that the names should be ordered with respect to the integer that they are assigned in phase
-        annotations files.</p>
-      <textarea class="input-textarea" id="phase-labels" [(ngModel)]="phaseLabels" placeholder="Example: Preparation, Calot triangle dissection, ..."></textarea>
-    </div>
-
-    <div class="form-element form-input-element">
-      <label class="input-label" for="inst-labels">Instrument labels</label>
-      <p class="input-description">Provide a comma-separated list of names of all surgical phases that are present in
-        the dataset.</p>
-      <textarea class="input-textarea" id="inst-labels" [(ngModel)]="instLabels" placeholder="Example: Grasper, Bipolar, ..."></textarea>
-    </div>
-
-    <div class="form-element form-input-element">
-      <label class="input-label">Cross-validation splits</label>
-      <p class="input-description">Provide dataset splits and the corresponding comma-separated lists of
-        <i>surgery IDs</i>.</p>
-
-      <div class="table">
-        <div class="table-header-row">
-          <div class="table-header">Split</div>
-          <div class="table-header">Training</div>
-          <div class="table-header">Validation</div>
-        </div>
-        <ng-container *ngFor="let _ of crossValSplit; let i = index">
-          <div class="table-row">
-            <div class="row-number">Split {{ i + 1 }}</div>
-            <textarea class="input-cell" [(ngModel)]="crossValSplit[i][Split.Training]" placeholder="Example: 1, 2, ..."></textarea>
-            <textarea class="input-cell" [(ngModel)]="crossValSplit[i][Split.Validation]" placeholder="Example: 41, 42, ..."></textarea>
-          </div>
-        </ng-container>
+      <div class="form-element form-input-element">
+        <label class="input-label" for="phase-id">Phase file identifier</label>
+        <p class="input-description">Define the <i>phase file identifier</i>. It represents a substring of the filename that is
+          specific for phase annotation files. See the example above.</p>
+        <input type="text" class="input-text" id="phase-id" placeholder="Example: phase" [(ngModel)]="phaseId">
       </div>
 
-    </div>
-    <div class="form-buttons">
-      <button class="button button-medium" (click)="addSplit()">Add split</button>
-      <button class="button button-medium" (click)="removeSplit()">Remove split</button>
-    </div>
+      <div class="form-element form-input-element">
+        <label class="input-label" for="inst-id">Instrument file identifier</label>
+        <p class="input-description">Define the <i>instrument file identifier</i>. It represents a substring of the filename
+          that is specific for instrument annotation files. See the example above.</p>
+        <input type="text" class="input-text" id="inst-id" placeholder="Example: inst" [(ngModel)]="instId">
+      </div>
 
-    <div class="form-element form-input-element">
-      <label class="input-label" for="test-set">Test split</label>
-      <p class="input-description">Provide a comma-separated list of <i>surgery IDs</i> from the test dataset.</p>
-      <textarea class="input-textarea" id="test-set" [(ngModel)]="testSet" placeholder="Example: 81, 82, ..."></textarea>
-    </div>
+      <div class="form-element form-input-element">
+        <label class="input-label" for="phase-labels">Phase labels</label>
+        <p class="input-description">Provide a comma-separated list of names of all surgical phases that are present in
+          the dataset. Note that the names should be ordered with respect to the integer that they are assigned in phase
+          annotations files.</p>
+        <textarea class="input-textarea" id="phase-labels" [(ngModel)]="phaseLabels" placeholder="Example: Preparation, Calot triangle dissection, ..."></textarea>
+      </div>
 
-    <div class="form-element form-submit">
+      <div class="form-element form-input-element">
+        <label class="input-label" for="inst-labels">Instrument labels</label>
+        <p class="input-description">Provide a comma-separated list of names of all surgical phases that are present in
+          the dataset.</p>
+        <textarea class="input-textarea" id="inst-labels" [(ngModel)]="instLabels" placeholder="Example: Grasper, Bipolar, ..."></textarea>
+      </div>
 
-      <button class="button button-large" (click)="processFiles()" [disabled]="processing">
-        <ng-container *ngIf="!processing">
-          Visualize data
-        </ng-container>
+      <div class="form-element form-input-element">
+        <label class="input-label">Cross-validation splits</label>
+        <p class="input-description">Provide dataset splits and the corresponding comma-separated lists of <i>surgery IDs</i>.</p>
 
-        <ng-container *ngIf="processing">
-          <app-loader></app-loader>
-        </ng-container>
-      </button>
-    </div>
 
-<!--    <ng-template #loader>-->
-<!--      <div class="loader"></div>-->
-<!--    </ng-template>-->
+        <div class="table">
+          <div class="table-header-row">
+            <div class="table-header">Split</div>
+            <div class="table-header">Training</div>
+            <div class="table-header">Validation</div>
+          </div>
+          <ng-container *ngFor="let _ of crossValSplit; let i = index">
+            <div class="table-row">
+              <div class="row-number">Split {{ i + 1 }}</div>
+              <textarea class="input-cell" [(ngModel)]="crossValSplit[i][0]" placeholder="Example: 1, 2, ..."></textarea>
+              <textarea class="input-cell" [(ngModel)]="crossValSplit[i][1]" placeholder="Example: 41, 42, ..."></textarea>
+            </div>
+          </ng-container>
+        </div>
+
+      </div>
+
+      <div class="form-buttons">
+        <button class="button button-medium" (click)="addSplit()">Add split</button>
+        <button class="button button-medium" (click)="removeSplit()">Remove split</button>
+      </div>
+
+      <div class="form-element form-input-element">
+        <label for="test-set">Test split</label>
+        <p class="input-description">Provide a comma-separated list of <i>surgery IDs</i> from the test dataset.</p>
+        <textarea class="input-textarea" id="test-set" [(ngModel)]="testSet" placeholder="Example: 81, 82, ..."></textarea>
+      </div>
+
+      <div class="form-element form-submit">
+        <button class="button button-large" (click)="processFiles()">Visualize data</button>
+      </div>
   </div>
 </div>
