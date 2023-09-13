@@ -126,15 +126,14 @@ export class DataParserService {
       Split.Training : validationSet.has(fileNumber) ?
         Split.Validation :  testSet.has(fileNumber) ? Split.Test : undefined;
 
-    const phaseIndex = this.createPhaseIndex(unifiedData);
+    const phaseIndex = this.createPhaseIndex(parsedPhases);
 
-    const instIndex = this.createInstIndex(unifiedData);
-
+    const instIndex = this.createInstIndex(parsedInst);
     const idleId = CONSTANTS.instrumentMappingInverse(CONSTANTS.idleLabel)!;
-    const idleIndex = this.createIdleIndex(unifiedData);
+    const idleIndex = this.createIdleIndex(parsedInst);
     instIndex[idleId] = idleIndex;
 
-    const occIndex = this.createInstOccurrenceIndex(unifiedData);
+    const occIndex = this.createInstOccurrenceIndex(parsedInst, parsedPhases[parsedPhases.length - 1].Frame);
     occIndex.push({object: new Set([idleId]), value: idleIndex})
 
     return {
@@ -241,13 +240,13 @@ export class DataParserService {
 
     // flush remaining data
     if (startFrame !== -1) {
-      result.push({start: startFrame, end: currFrame});
+      result.push({start: startFrame, end: prevFrame}); // TODO: is lastFrameNr necessary?
     }
 
     return result;
   }
 
-  private createInstOccurrenceIndex(instAnnot: Record<string, number>[]): DataCounterNew<Set<string>, Occurrence[]>[] {
+  private createInstOccurrenceIndex(instAnnot: Record<string, number>[], lastFrameNr: number): DataCounterNew<Set<string>, Occurrence[]>[] {
     let result: DataCounterNew<Set<string>, Occurrence[]>[] = [];
     let prevFrame = -1;
 
@@ -265,18 +264,17 @@ export class DataParserService {
 
       if (occurrenceSet.size > 0) { // single instruments are also counted
         let resultEntry = result.find(e => SetMethods.setEquality(e.object, occurrenceSet));
-
         let currOcc = {
           start: currFrame,
-          end: currFrame
-        }
+          end: Math.min(frame[CONSTANTS.columnNames.frame], lastFrameNr) // TODO: is lastFrameNr necessary?
+        };
 
         if (resultEntry !== undefined) { // occurrence already present in the result object
 
           let prevOcc = resultEntry.value.find(e => e.end === prevFrame);
 
           if (prevOcc !== undefined) { // subsequent occurrence
-            prevOcc.end = currFrame; // extend previous occurrence object
+            prevOcc.end = currOcc.end; // extend previous occurrence object
           } else { // non-subsequent co-occurrence
             resultEntry.value.push(currOcc)
           }
