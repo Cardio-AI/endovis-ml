@@ -2,6 +2,7 @@ import {Component, OnInit} from '@angular/core';
 import {SurgeryData} from "../model/SurgeryData";
 import * as d3 from "d3";
 import {DataSharingService} from "../service/data-sharing.service";
+import {Observable} from "rxjs";
 import {CONSTANTS} from "../constants";
 import {DataForwardService} from "../service/data-forward.service";
 
@@ -23,10 +24,10 @@ export class SetAssignmentComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    console.log('SET-ASSIGNMENT CREATED');
-
-    this.localDatasetCopy = this.dataForwardService.dataset;
-    this.dataSharingService.updateDataset(this.localDatasetCopy.filter(s => s.set !== 'unassigned'))
+    this.dataForwardService.dataset$.subscribe(dataset => {
+      this.localDatasetCopy = dataset;
+      this.dataSharingService.updateDataset(this.localDatasetCopy.filter(s => s.set !== 'unassigned'))
+    });
 
     d3.select('#reset-selection').on('click', e => {
       this.assignData();

@@ -4,9 +4,6 @@ import {DataService} from "../service/data.service";
 import {DataParserService} from "../service/data-parser.service";
 import {Delimiter} from "../enums/Delimiter";
 import {Split} from "../enums/Split";
-import {Router} from "@angular/router";
-import {DataForwardService} from "../service/data-forward.service";
-import {FormDataService} from "../service/form-data.service";
 
 @Component({
   selector: 'app-upload',
@@ -15,16 +12,27 @@ import {FormDataService} from "../service/form-data.service";
 })
 export class UploadComponent implements OnInit {
 
+  selectedFiles: File[] = [];
+  uploadedFiles: FileUpload<string>[] = [];
+  separator: Delimiter = Delimiter.COMMA;
+  phaseId: string = "";
+  instId: string = "";
+  phaseLabels: string = "";
+  instLabels: string= "";
+  crossValSplit: number[][][] = [[]];
+  testSet: number[] = [];
+
+  //
   separators = Object.values(Delimiter);
-  constructor(private formDataService: FormDataService, private dataService: DataService, private dataParserService: DataParserService, private router: Router, private dataForwardService: DataForwardService) {
-  }
+
+  constructor(private dataService: DataService, private dataParserService: DataParserService) { }
 
   ngOnInit(): void {
   }
 
   readFiles(event: Event) {
     // reset lists of files
-    this.formDataService.selectedFiles = [];
+    this.selectedFiles = [];
     this.uploadedFiles = [];
 
     const fileList = (event.target as HTMLInputElement).files;
@@ -52,7 +60,7 @@ export class UploadComponent implements OnInit {
     const parsedParamFile = this.dataParserService.parseParamFile(file);
 
       if(parsedParamFile) {
-        this.delimiter = parsedParamFile.separator;
+        this.separator = parsedParamFile.separator;
         this.phaseId = parsedParamFile.phaseId;
         this.instId = parsedParamFile.instId;
         this.phaseLabels = parsedParamFile.phaseLabels.toString();
@@ -83,86 +91,11 @@ export class UploadComponent implements OnInit {
     const instLabelsArray = this.dataParserService.splitString(this.instLabels);
 
     let dataset = fileMatches.map(([phaseFile, instFile]) => {
-      return this.dataParserService.parseData(phaseFile, instFile, this.phaseId, this.delimiter, instLabelsArray);
+      return this.dataParserService.parseData(phaseFile, instFile, this.phaseId, this.separator, instLabelsArray);
     });
 
     // go to train-val
-    this.dataForwardService.dataset = dataset;
-
-    this.router.navigate(['/train-test']);
-  }
-
-  // get and set methods
-  get selectedFiles(): File[] {
-    return this.formDataService.selectedFiles;
-  }
-
-  set selectedFiles(value: File[]) {
-    this.formDataService.selectedFiles = value;
-  }
-
-  get uploadedFiles(): FileUpload<string>[] {
-    return this.formDataService.uploadedFiles;
-  }
-
-  set uploadedFiles(value: FileUpload<string>[]) {
-    this.formDataService.uploadedFiles = value;
-  }
-
-  get delimiter(): Delimiter {
-    return this.formDataService.delimiter;
-  }
-
-  set delimiter(value: Delimiter) {
-    this.formDataService.delimiter = value;
-  }
-
-  get phaseId(): string {
-    return this.formDataService.phaseId;
-  }
-
-  set phaseId(value: string) {
-    this.formDataService.phaseId = value;
-  }
-
-  get instId(): string {
-    return this.formDataService.instId;
-  }
-
-  set instId(value: string) {
-    this.formDataService.instId = value;
-  }
-
-  get phaseLabels(): string {
-    return this.formDataService.phaseLabels;
-  }
-
-  set phaseLabels(value: string) {
-    this.formDataService.phaseLabels = value;
-  }
-
-  get instLabels(): string {
-    return this.formDataService.instLabels;
-  }
-
-  set instLabels(value: string) {
-    this.formDataService.instLabels = value;
-  }
-
-  get crossValSplit(): number[][][] {
-    return this.formDataService.crossValSplit;
-  }
-
-  set crossValSplit(value: number[][][]) {
-    this.formDataService.crossValSplit = value;
-  }
-
-  get testSet(): number[] {
-    return this.formDataService.testSet;
-  }
-
-  set testSet(value: number[]) {
-    this.formDataService.testSet = value;
+    console.log(dataset)
   }
 
 }

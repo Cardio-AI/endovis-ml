@@ -1,5 +1,6 @@
 <div class="upload">
   <div class="view-section upload-dialog">
+    <!--    <h2 class="upload-dialog-header">Dataset upload</h2>-->
     <div class="upload-dialog-form">
       <input type="file" id="file-upload" (input)="readFiles($event)" multiple>
       <label for="file-upload">
@@ -8,7 +9,7 @@
             <ng-container *ngIf="uploadedFiles.length; else notUploaded">
               <span>{{uploadedFiles.length + " files uploaded"}}</span>
               <ng-container *ngIf="uploadedFiles.length < selectedFiles.length; else uploadSuccess">
-                <progress id="upload-progress" [value]="uploadedFiles.length" [max]="selectedFiles.length"></progress>
+                <progress id="upload-progress" [value]="uploadedFiles.length" [max]="this.selectedFiles.length"></progress>
               </ng-container>
             </ng-container>
 
@@ -24,41 +25,41 @@
         </div>
       </label>
 
-      <div class="form-element form-input-element">
-        <label for="separator">Value delimiter</label>
-        <select class="input-select" id="separator" [(ngModel)]="delimiter">
+      <div class="upload-dialog-form-input">
+        <label for="separator">Value separator</label>
+        <select class="input-select" id="separator" [(ngModel)]="separator">
           <option *ngFor="let separator of separators" [value]="separator">{{ separator | capitalize }}</option>
-          <!--          <option value="tab">Tab</option>-->
-          <!--          <option value="semicolon">Semicolon</option>-->
+<!--          <option value="tab">Tab</option>-->
+<!--          <option value="semicolon">Semicolon</option>-->
         </select>
         <span class="form-hint">Value separator used in phase and instrument annotation files</span>
       </div>
 
-      <div class="form-element form-input-element">
+      <div class="upload-dialog-form-input">
         <label for="phase-id">Phase file identifier</label>
         <input type="text" class="input-text" id="phase-id" placeholder="e.g. phase" [(ngModel)]="phaseId">
         <span class="form-hint">Part of file name that is specific for phase annotation files</span>
       </div>
 
-      <div class="form-element form-input-element">
+      <div class="upload-dialog-form-input">
         <label for="inst-id">Instrument file identifier</label>
         <input type="text" class="input-text" id="inst-id" placeholder="e.g. tool" [(ngModel)]="instId">
         <span class="form-hint">Part of file name that is specific for instrument annotation files</span>
       </div>
 
-      <div class="form-element form-input-element">
+      <div class="upload-dialog-form-input">
         <label for="phase-labels">Phase labels</label>
         <textarea class="input-textarea" id="phase-labels" [(ngModel)]="phaseLabels"></textarea>
         <span class="form-hint">Comma-separated list of phase labels (ordered)</span>
       </div>
 
-      <div class="form-element form-input-element">
+      <div class="upload-dialog-form-input">
         <label for="phase-labels">Instrument labels</label>
         <textarea class="input-textarea" id="inst-labels" [(ngModel)]="instLabels"></textarea>
         <span class="form-hint">Comma-separated list of instrument labels</span>
       </div>
 
-      <div class="form-element form-input-element">
+      <div class="upload-dialog-form-input">
         <label>Cross-validation splits</label>
 
         <div class="table">
@@ -74,25 +75,26 @@
           </ng-container>
         </div>
 
+        <div class="buttons-fit">
+          <button class="button button-medium" (click)="addSplit()">+</button>
+          <button class="button button-medium" (click)="removeSplit()">-</button>
+        </div>
       </div>
-      <div class="cross-val-row">
-        <span class="form-hint">Comma-separated list of surgery IDs of the cross-validation splits</span>
+        <div class="cross-val-row">
+<!--        <a>Add split</a>-->
+        <span class="form-hint">Comma-separated list of surgery IDs from the test set</span>
       </div>
 
-      <div class="form-buttons">
-        <button class="button button-medium" (click)="addSplit()">+</button>
-        <button class="button button-medium" (click)="removeSplit()">-</button>
-      </div>
-
-      <div class="form-element form-input-element">
+      <div class="upload-dialog-form-input">
         <label for="test-set">Test split</label>
         <textarea class="input-textarea" id="test-set" [(ngModel)]="testSet"></textarea>
         <span class="form-hint">Comma-separated list of surgery IDs from the test set</span>
       </div>
 
-      <div class="form-element form-buttons">
-        <button class="button button-large" (click)="processFiles()">Process data</button>
-      </div>
     </div>
+    <div class="dialog-buttons">
+      <button class="button button-large" (click)="processFiles()">Process data</button>
+    </div>
+
   </div>
 </div>

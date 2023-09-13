@@ -11,10 +11,19 @@
   padding: 2% 3%;
 }
 
+.upload-dialog-header {
+  text-align: center;
+}
+
 .upload-dialog-form {
   display: flex;
   flex-direction: column;
 }
+
+.upload-dialog-form>* {
+  margin-top: 20px;
+}
+
 .upload-dialog-form-files {
   display: flex;
   justify-content: center;
@@ -28,10 +37,6 @@
   cursor: pointer;
 }
 
-.form-element {
-  margin-top: 20px;
-}
-
 #upload-dialog-form-files-message {
   font-size: 24px;
   user-select: none;
@@ -41,22 +46,9 @@
   align-items: center;
 }
 
-.form-input-element {
+.upload-dialog-form-input {
   display: flex;
   flex-direction: column;
-}
-
-.buttons {
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-}
-
-.form-buttons {
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  gap: 20px;
 }
 
 .upload-dialog-form-files-dragging {
