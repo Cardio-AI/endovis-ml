@@ -4,6 +4,7 @@ import {SurgeryData} from "../model/SurgeryData";
 import {PhaseAnnotationRow} from "../model/PhaseAnnotationRow";
 import {CONSTANTS} from "../constants";
 import {Occurrence} from "../model/Occurrence";
+import {DataCounterSelection} from "../model/DataCounterSelection";
 import {DataCounterNew} from "../model/DataCounterNew";
 import {SetMethods} from "../util/SetMethods";
 import {NestedOccurrence} from "../model/NestedOccurrence";
@@ -32,7 +33,7 @@ export class DataParserService {
 
       const duration = parsedPhases.length;
 
-      const instFile = instData.find(e => e.name === `${fileName}${CONSTANTS.instFileSuffix}`);
+      const instFile = instData.find(e => e.name === `${fileName}-tool.txt`);
 
       let parsedInst: Record<string, number>[] = d3.csvParse(instFile!.content, row => {
         let result: Record<string, number> = {};
