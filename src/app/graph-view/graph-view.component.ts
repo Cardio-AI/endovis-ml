@@ -5,6 +5,7 @@ import * as d3 from "d3";
 import {PieArcDatum} from "d3";
 import {CONSTANTS} from "../constants";
 import {Transition} from "../model/Transition";
+import {DataCounter} from "../model/DataCounter";
 import {Occurrence} from "../model/Occurrence";
 import {WordWrap} from "../util/WordWrap";
 import {DataCounterNew} from "../model/DataCounterNew";
@@ -35,9 +36,7 @@ export class GraphViewComponent implements OnInit {
   private transitions: DataCounterSelection<Transition, DataCounterNew<string, number>[]>[] = [];
 
 
-  constructor(private dataSharingService: DataSharingService,
-              private instrumentSelectionService: InstrumentSelectionService,
-              private phaseSelectionService: PhaseSelectionService) {
+  constructor(private dataSharingService: DataSharingService, private instrumentSelectionService: InstrumentSelectionService, private phaseSelectionService: PhaseSelectionService) {
   }
 
   ngOnInit(): void {
@@ -103,8 +102,8 @@ export class GraphViewComponent implements OnInit {
   }
 
   private drawGraph() {
-    let phaseData: DataCounterSelection<string, DataCounterNew<string, number>[]>[] = this.globalPhaseSelection.length > 0 ?
-      this.globalPhaseSelection : this.allPhaseData;
+    let phaseData: DataCounterSelection<string, DataCounterNew<string, number>[]>[] = this.globalPhaseSelection.length > 0 ? this.globalPhaseSelection : this.allPhaseData;
+    let instData: DataCounterNew<string, Record<string, string | number>[]>[] = this.globalInstrumentSelection.length > 0 ? this.globalInstrumentSelection : this.allInstrumentData;
 
     let phaseScale = d3.scaleBand()
       .domain(CONSTANTS.phaseMapping.domain())
@@ -1023,6 +1022,53 @@ export class GraphViewComponent implements OnInit {
 
   }
 
+  private selectionToTransitions(selection: DataCounterNew<number, Occurrence[]>[]): DataCounterSelection<string, DataCounterNew<string, number>[]>[] {
+    let result: DataCounterSelection<string, DataCounterNew<string, number>[]>[] = [];
+
+    selection.forEach(sp => {
+      let spObj = this.localDatasetCopy.find(e => e.spNr === sp.object)!;
+
+      // iterate over all
+
+      sp.value.forEach(occ => { // for each occurrence of the surgery
+
+        CONSTANTS.phaseMapping.domain().forEach(phaseId => {
+
+          spObj.phaseIndex[phaseId].forEach(e => {
+            let overlapStart = Math.max(occ.start, e.start);
+            let overlapEnd = Math.min(occ.end, e.end);
+
+            if (overlapStart < overlapEnd) {
+
+              let resultEntry = result.find((e => e.object === phaseId));
+
+              if (resultEntry === undefined) {
+                let newEntry: DataCounterSelection<string, DataCounterNew<string, number>[]> = {
+                  object: phaseId,
+                  value: CONSTANTS.datasets.map(d => ({object: d, value: 0})),
+                  originalData: []
+                };
+                newEntry.value.find(e => e.object === spObj.set)!.value = overlapEnd - overlapStart + 1;
+                newEntry.originalData.push({object: sp.object, value: [{start: overlapStart, end: overlapEnd}]});
+                result.push(newEntry);
+              } else {
+                resultEntry.value.find(e => e.object === spObj.set)!.value += overlapEnd - overlapStart + 1;
+                let spEntry = resultEntry.originalData.find(s => s.object === sp.object)
+
+                if (spEntry === undefined) {
+                  resultEntry.originalData.push({object: sp.object, value: [{start: overlapStart, end: overlapEnd}]});
+                } else {
+                  spEntry.value.push({start: overlapStart, end: overlapEnd});
+                }
+              }
+            }
+          });
+        });
+      });
+    });
+    return result;
+  }
+
   private getTransitions(data: DataCounterNew<number, Occurrence[]>[]): DataCounterSelection<Transition, DataCounterNew<string, number>[]>[] {
 
     let result: DataCounterSelection<Transition, DataCounterNew<string, number>[]>[] = [];
@@ -1087,6 +1133,63 @@ export class GraphViewComponent implements OnInit {
       });
     });
 
+
+    return result;
+  }
+
+  private getOccurrences(): DataCounter<DataCounter<DataCounter<Occurrence[]>[]>[]>[] {
+    let result: DataCounter<DataCounter<DataCounter<Occurrence[]>[]>[]>[] = [];
+
+    CONSTANTS.phaseMapping.domain().forEach(phaseId => { // for each phase
+      let dataCounter: DataCounter<DataCounter<Occurrence[]>[]>[] = [];
+
+      CONSTANTS.datasets.forEach(set => { // for each dataset
+        const data = this.localDatasetCopy.filter(e => e.set === set);
+        const setDuration = d3.sum(data.map(e => e.duration));
+        let phaseSetSps: DataCounter<Occurrence[]>[] = []
+        data.forEach(sp => { // for each surgery
+          let phaseSpOcc: Occurrence[] = []
+          sp.phaseIndex[phaseId].forEach((occ: Occurrence) => {
+            phaseSpOcc.push(occ)
+          });
+          if(phaseSpOcc.length > 0) { // surgery has some occurrences
+            phaseSetSps.push({object: sp.spNr + "", value: phaseSpOcc});
+          }
+        });
+        if(phaseSetSps.length > 0) { // set has some surgeries
+          dataCounter.push({object: set, value: phaseSetSps});
+        }
+      });
+      if(dataCounter.length > 0) { // phase is present in a set
+        result.push({object: phaseId, value: dataCounter})
+      }
+    });
+    return result;
+  }
+
+  private getAllPhaseOccurrences(): DataCounterSelection<string, DataCounterNew<string, number>[]>[] {
+    let result: DataCounterSelection<string, DataCounterNew<string, number>[]>[] = []
+
+    CONSTANTS.phaseMapping.domain().forEach(phaseId => { // for each phase
+      let setCounter: DataCounterNew<string, number>[] = [];
+      let occurrences: DataCounterNew<number, Occurrence[]>[] = []
+      CONSTANTS.datasets.forEach(set => { // for each set
+        const data = this.localDatasetCopy.filter(e => e.set === set);
+        let frameCounter = 0;
+        data.forEach(sp => { // for each surgery
+          sp.phaseIndex[phaseId].forEach(occ => {
+            frameCounter += occ.end - occ.start + 1;
+          });
+          if(sp.phaseIndex[phaseId].length > 0) {
+            occurrences.push({object: sp.spNr, value: sp.phaseIndex[phaseId]});
+          }
+        });
+        setCounter.push({object: set, value: frameCounter});
+      });
+      if (occurrences.length > 0) {
+        result.push({object: phaseId, value: setCounter, originalData: occurrences});
+      }
+    });
     return result;
   }
 
@@ -1139,6 +1242,22 @@ export class GraphViewComponent implements OnInit {
     });
     return result;
   }
+
+  // private calcNrOccurrences(data: Transition[]): DataCounter<number>[] {
+  //   let result: DataCounter<number>[] = [];
+  //   CONSTANTS.phaseMapping.domain().forEach(phaseId => {
+  //     let counter = 0;
+  //     data.forEach(sp => {
+  //       if(sp.end === phaseId) {
+  //         counter += sp.sps.length;
+  //       }
+  //     });
+  //     if(counter > 0 ) {
+  //       result.push({object: phaseId, value: counter});
+  //     }
+  //   });
+  //   return result;
+  // }
 
   private selectionToInstrumentData(selection: DataCounterNew<number, Occurrence[]>[]): DataCounterNew<string, Record<string, string | number>[]>[] {
     let result: DataCounterNew<string, Record<string, string | number>[]>[] = []; // counter per phase
@@ -1203,6 +1322,61 @@ export class GraphViewComponent implements OnInit {
                 });
               });
             }
+          });
+        });
+      });
+    });
+    return result;
+  }
+
+  private getAllInstrumentOccurrences(): DataCounterNew<string, Record<string, string | number>[]>[] {
+    let result: DataCounterNew<string, Record<string, string | number>[]>[] = []; // counter per phase
+
+    CONSTANTS.phaseMapping.domain().forEach(phaseId => { // for each phase
+
+      this.localDatasetCopy.forEach(sp => {
+
+        sp.phaseIndex[phaseId].forEach(phaseOcc => {
+          CONSTANTS.instrumentMapping.domain().forEach(instId => {
+            sp.instIndex[instId].forEach(instOcc => {
+              let overlapStart = Math.max(phaseOcc.start, instOcc.start);
+              let overlapEnd = Math.min(phaseOcc.end, instOcc.end);
+
+              if (overlapStart < overlapEnd) {
+                let resultEntry = result.find((e => e.object === phaseId));
+
+                if (resultEntry === undefined) {
+                  let newValue: Record<string, string | number> = {instId: instId};
+                  CONSTANTS.datasets.forEach(d => newValue[d] = 0);
+
+                  if(sp.set) {
+                    newValue[sp.set] = overlapEnd - overlapStart + 1;
+                  } else {
+                    throw new Error(`Surgery ${sp.spNr} is not assigned to any set`)
+                  }
+
+                  result.push({object: phaseId, value: [newValue]});
+                } else {
+                  let instEntry = resultEntry.value.find(i => i['instId'] === instId);
+
+                  if (instEntry === undefined) {
+                    let newValue: Record<string, string | number> = {instId: instId};
+                    CONSTANTS.datasets.forEach(d => newValue[d] = 0);
+
+                    if(sp.set) {
+                      newValue[sp.set] = overlapEnd - overlapStart + 1;
+                    } else {
+                      throw new Error(`Surgery ${sp.spNr} is not assigned to any set`)
+                    }
+
+                    resultEntry.value.push(newValue)
+                  } else {
+                    // @ts-ignore
+                    instEntry[sp.set] += overlapEnd - overlapStart + 1;
+                  }
+                }
+              }
+            });
           });
         });
       });
