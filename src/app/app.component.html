@@ -1,16 +1,11 @@
 <div id="navbar">
   <div id="navbar-list">
-    <a class="navbar-link navbar-menu" (click)="toggleMenu()">&#x2261;</a>
-    <a class="navbar-link navbar-home" routerLink="/">EndovisML</a>
+    <a class="menu">&#x2261;</a>
+    <a class="home" routerLink="/">EndovisML</a>
   </div>
 </div>
 
 <div id="component-container">
   <router-outlet></router-outlet>
-</div>
-
-<div class="view-section menu-expand" *ngIf="menuToggled">
-  <a class="menu-link" href="https://github.com/Cardio-AI/endovis-ml/">GitHub Repository</a>
-  <a class="menu-link" routerLink="/3rdpartylicenses.txt">Third Party Notice</a>
 </div>
 

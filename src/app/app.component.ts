@@ -11,17 +11,11 @@ import {DataForwardService} from "./service/data-forward.service";
 export class AppComponent {
   title = 'endovis-ml';
 
-  menuToggled = false;
-
   constructor(private dataService: DataService, private dataParserService: DataParserService, private dataForwardService: DataForwardService) {
   }
 
   ngOnInit(): void {
 
-  }
-
-  toggleMenu() {
-    this.menuToggled = !this.menuToggled;
   }
 
 }
