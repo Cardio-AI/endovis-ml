@@ -1095,6 +1095,7 @@ export class GraphViewComponent implements OnInit {
    * @private
    */
   private selectionToPhaseOccurrences(selection: DataCounterNew<number, Occurrence[]>[]): DataCounterSelection<string, DataCounterNew<string, number>[]>[] {
+    console.log(selection)
     let result: DataCounterSelection<string, DataCounterNew<string, number>[]>[] = [];
 
     selection.forEach(spSelection => { // for each selected surgery
@@ -1142,6 +1143,7 @@ export class GraphViewComponent implements OnInit {
         });
       });
     });
+    console.log(result)
     return result;
   }
 

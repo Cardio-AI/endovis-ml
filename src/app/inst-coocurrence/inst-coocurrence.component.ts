@@ -384,6 +384,8 @@ export class InstCoocurrenceComponent implements OnInit {
           // attach original frames that will be used for selections
           resEntry.originalData.push({object: sp.spNr, value: instOccur.value});
         } else { // add new occurrence to the result object
+          // if(SetMethods.setEquality(new Set(["1","3"]), instOccur.object)) debugger
+
           let newResEntry: DataCounterSelection<Set<string>, DataCounterNew<string, number>[]> = {
             object: instOccur.object,
             value: CONSTANTS.datasets.map(set => ({object: set, value: 0})),
