@@ -100,7 +100,6 @@ export class UploadComponent implements OnInit {
       // go to the train-val component
       this.router.navigate(['/train-test']);
     });
-    console.log('Hello')
   }
 
   // get and set methods

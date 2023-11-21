@@ -47,8 +47,6 @@ export class LandingComponent implements OnInit {
         this.dataForwardService.crossValSplits = paramFile.crossValSplits;
         this.dataForwardService.testSet = paramFile.testSplit;
 
-        console.log(dataset)
-
         // go to the train-val component
         this.router.navigate(['/train-test']);
       });

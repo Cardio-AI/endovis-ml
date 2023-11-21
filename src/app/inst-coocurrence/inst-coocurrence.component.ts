@@ -72,8 +72,6 @@ export class InstCoocurrenceComponent implements OnInit {
 
       const allOccurrences = this.getAllOccurrences();
       this.allInstCooccurrences = allOccurrences.filter(e => e.object.size > 1);
-      console.log(allOccurrences)
-      console.log(this.allInstCooccurrences)
       this.allInstOccurrences = this.occurrenceToBarchartData(allOccurrences);
 
       // reset all selections when the dataset is updated
@@ -588,13 +586,13 @@ export class InstCoocurrenceComponent implements OnInit {
             .attr('r', nodeRadius)
             .attr('fill-opacity', 0)
         ).on('mouseover', (e, d) => {
-        d3.selectAll(`.edge.${[...pData.object].map(CONSTANTS.instrumentMapping).join('-')}`)
+        d3.selectAll(`.edge.${[...pData.object].map(p => `n${p}`).join('-')}`)
           .transition().duration(200)
           .attr('stroke', 'black')
           // .attr('opacity', 1)
           .attr('stroke-width', 3);
       }).on('mouseout', () => {
-        let edges = d3.selectAll(`.edge.${[...pData.object].map(CONSTANTS.instrumentMapping).join('-')}`);
+        let edges = d3.selectAll(`.edge.${[...pData.object].map(p => `n${p}`).join('-')}`);
         let edgesTransition = edges.transition().duration(200);
         if (!edges.attr('class').includes("clicked")) {
           edgesTransition
@@ -666,7 +664,7 @@ export class InstCoocurrenceComponent implements OnInit {
         .data(pData.object)
         .join(
           enter => enter.append('line')
-            .attr('class', `edge ${[...pData.object].map(CONSTANTS.instrumentMapping).join('-')}`)
+            .attr('class', `edge ${[...pData.object].map(p => `n${p}`).join('-')}`)
             .attr('x1', d => this.instIdxToXCoord(this.findIdx(data, d), angle, radius))
             .attr('x2', pData.x || 0)
             .attr('y1', d => this.instIdxToYCoord(this.findIdx(data, d), angle, radius))

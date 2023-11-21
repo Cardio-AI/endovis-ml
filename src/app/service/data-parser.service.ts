@@ -163,8 +163,6 @@ export class DataParserService {
 
     CONSTANTS.phaseMapping.domain().forEach((phaseId: string) => result[phaseId] = [])
 
-    console.log(result)
-
     let startFrame = -1;
     let currPhase = -1;
     let prevFrame = -1;

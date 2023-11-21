@@ -34,7 +34,6 @@ export class FileDropDirective {
 
     let selectedFiles = e.dataTransfer?.files;
 
-    console.log(selectedFiles)
     this.active = false;
   }
 }
