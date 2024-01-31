@@ -1,17 +1,17 @@
-import {Injectable} from '@angular/core';
+import { Injectable } from '@angular/core';
 import * as d3 from 'd3';
-import {SurgeryData} from "../model/SurgeryData";
-import {PhaseAnnotationRow} from "../model/PhaseAnnotationRow";
-import {CONSTANTS} from "../constants";
-import {Occurrence} from "../model/Occurrence";
-import {DataCounterNew} from "../model/DataCounterNew";
-import {SetMethods} from "../util/SetMethods";
-import {FileUpload} from "../model/FileUpload";
-import {ParamFile} from "../model/ParamFile";
-import {Delimiter} from "../enums/Delimiter";
-import {InstAnnotationRow} from "../model/InstAnnotationRow";
-import {AnnotationRow} from "../model/AnnotationRow";
-import {LabelDataService} from "./label-data.service";
+import { SurgeryData } from "../model/SurgeryData";
+import { PhaseAnnotationRow } from "../model/PhaseAnnotationRow";
+import { CONSTANTS } from "../constants";
+import { Occurrence } from "../model/Occurrence";
+import { DataCounterNew } from "../model/DataCounterNew";
+import { SetMethods } from "../util/SetMethods";
+import { FileUpload } from "../model/FileUpload";
+import { ParamFile } from "../model/ParamFile";
+import { Delimiter } from "../enums/Delimiter";
+import { InstAnnotationRow } from "../model/InstAnnotationRow";
+import { AnnotationRow } from "../model/AnnotationRow";
+import { LabelDataService } from "./label-data.service";
 
 
 @Injectable({
@@ -21,18 +21,9 @@ export class DataParserService {
 
   constructor(private labelDataService: LabelDataService) {}
 
-  // crossValListToSet(crossValList: Record<string, number[]>[]) {
-  //   return crossValList.map(split => {
-  //     return {
-  //       train: new Set(split[0]),
-  //       validation: new Set(split[1]),
-  //     }
-  //   });
-  // }
-
   parseParamFile(file: FileUpload<string>) {
     let res = JSON.parse(file.content) as ParamFile;
-    if(res) {
+    if (res) {
       return res;
     } else {
       throw new Error("Provided param.json file is not valid")
@@ -42,7 +33,7 @@ export class DataParserService {
   splitString(str: string): string[] {
     const arr = str.split(",").map(e => e.trim());
 
-    if(arr.length == 0) {
+    if (arr.length == 0) {
       throw new Error("The provided string is empty");
     }
 
@@ -51,12 +42,14 @@ export class DataParserService {
 
   matchPhaseAndInstFiles(fileList: FileUpload<string>[], phaseId: string, instId: string) {
     let matches: [FileUpload<string>, FileUpload<string>][] = [];
-    const regex: RegExp = /0*\d+/;
+    const regex: RegExp = /\d+/;
 
+    // categorize uploaded files
     const phaseFiles = fileList.filter(file => file.name.includes(phaseId));
     const instFiles = fileList.filter(file => file.name.includes(instId));
     const otherFiles = fileList.filter(file => !file.name.includes(phaseId) && !file.name.includes(instId) && file.name !== 'param.json');
 
+    // basic consistency checks
     if (phaseFiles.length == 0) {
       throw new Error('Could not find phase annotation files');
     }
@@ -66,22 +59,28 @@ export class DataParserService {
     }
 
     if (otherFiles.length > 0) {
-      console.warn("Could not recognize the following file names:", otherFiles.map(file => file.name))
+      console.warn("The following files will be ignored:", otherFiles.map(file => file.name))
     }
 
     if (phaseFiles.length != instFiles.length) {
       console.warn(`The number of phase (${phaseFiles.length}) and instrument (${instFiles.length}) annotation files does not match`)
     }
 
+    // create matching pairs of phase and instrument annotation files
     phaseFiles.forEach(phaseFile => {
-      const surgeryId = phaseFile.name.match(regex)![0];
+      const regexMatches = phaseFile.name.match(regex);
 
-      const instFile = instFiles.filter(instFile => instFile.name.includes(surgeryId))
+      if (regexMatches !== null && regexMatches.length > 0) {
+        const surgeryId = regexMatches[0];
+        const instFile = instFiles.filter(instFile => instFile.name.includes(surgeryId))
 
-      if (instFile.length == 1) {
-        matches.push([phaseFile, instFile[0]])
+        if (instFile.length == 1) {
+          matches.push([phaseFile, instFile[0]])
+        } else {
+          throw new Error(`Could not find matching instrument annotation file for ${phaseFile.name}`)
+        }
       } else {
-        throw new Error(`Could not find matching instrument annotation file for ${phaseFile.name}`)
+        throw new Error(`Filename ${phaseFile.name} does not contain an number`)
       }
     });
 
@@ -116,7 +115,7 @@ export class DataParserService {
           throw new Error(`Invalid value in file ${phaseFile.name} at line ${i}`)
         }
 
-        let result: InstAnnotationRow = {Frame: parseInt(frame)};
+        let result: InstAnnotationRow = { Frame: parseInt(frame) };
 
         this.labelDataService.instLabels.forEach((key: string) => {
           let value = row[key];
@@ -143,7 +142,7 @@ export class DataParserService {
     instIndex[idleId] = idleIndex;
 
     const occIndex = this.createInstOccurrenceIndex(unifiedData);
-    occIndex.push({object: new Set([idleId]), value: idleIndex})
+    occIndex.push({ object: new Set([idleId]), value: idleIndex })
 
     return {
       spNr: fileNumber,
@@ -172,7 +171,7 @@ export class DataParserService {
         startFrame = phaseAnnotRow.Frame;
         currPhase = phaseAnnotRow.Phase;
       } else if (phaseAnnotRow.Phase !== currPhase) { // phase changed
-        result[currPhase].push({start: startFrame, end: prevFrame})
+        result[currPhase].push({ start: startFrame, end: prevFrame })
         startFrame = phaseAnnotRow.Frame;
         currPhase = phaseAnnotRow.Phase;
       }
@@ -181,7 +180,7 @@ export class DataParserService {
 
     // flush remaining data
     if (startFrame !== null) {
-      result[currPhase].push({start: startFrame, end: prevFrame});
+      result[currPhase].push({ start: startFrame, end: prevFrame });
     }
 
     return result;
@@ -210,7 +209,7 @@ export class DataParserService {
           if (startFrame === -1 && row[inst] === 1) { // first frame
             startFrame = currFrame;
           } else if (startFrame !== -1 && row[inst] === 0) { // last frame
-            result[instId].push({start: startFrame, end: prevFrame});
+            result[instId].push({ start: startFrame, end: prevFrame });
             startFrame = -1;
           }
           prevFrame = currFrame;
@@ -218,7 +217,7 @@ export class DataParserService {
 
         // flush remaining data
         if (startFrame !== -1) {
-          result[instId].push({start: startFrame, end: prevFrame});
+          result[instId].push({ start: startFrame, end: prevFrame });
         }
       }
     });
@@ -241,7 +240,7 @@ export class DataParserService {
       if (startFrame === -1 && currRowSum === 0) { // first frame
         startFrame = currFrame;
       } else if (startFrame !== -1 && currRowSum > 0) { // instrument now present
-        result.push({start: startFrame, end: prevFrame});
+        result.push({ start: startFrame, end: prevFrame });
         startFrame = -1;
       }
       prevFrame = currFrame;
@@ -249,7 +248,7 @@ export class DataParserService {
 
     // flush remaining data
     if (startFrame !== -1) {
-      result.push({start: startFrame, end: currFrame});
+      result.push({ start: startFrame, end: currFrame });
     }
 
     return result;
@@ -302,11 +301,11 @@ export class DataParserService {
   }
 
   private unifyFiles(surgeryName: string, phaseData: PhaseAnnotationRow[], instData: InstAnnotationRow[]) {
-    let result: AnnotationRow[]= [];
+    let result: AnnotationRow[] = [];
     let nrSkippedRows = 0;
 
     phaseData.forEach(phaseRow => { // for each row
-      let unifiedRow: AnnotationRow = {Frame: phaseRow.Frame, Phase: phaseRow.Phase};
+      let unifiedRow: AnnotationRow = { Frame: phaseRow.Frame, Phase: phaseRow.Phase };
 
       let instRow = instData.find(instRow => instRow.Frame === phaseRow.Frame);
 
@@ -330,15 +329,15 @@ export class DataParserService {
     let surgeryName = filename.split(".")[0].replace(discard, "");
     const regex = /[a-zA-Z0-9]/
 
-    if(!surgeryName.charAt(0).match(regex)) {
+    if (!surgeryName.charAt(0).match(regex)) {
       surgeryName = surgeryName.slice(1);
     }
 
-    if(!surgeryName.charAt(surgeryName.length - 1).match(regex)) {
+    if (!surgeryName.charAt(surgeryName.length - 1).match(regex)) {
       surgeryName = surgeryName.slice(0, surgeryName.length - 1);
     }
 
-    if(surgeryName.length > 0) {
+    if (surgeryName.length > 0) {
       return surgeryName
     } else {
       throw new Error('Could not infer surgery name from a given filename')
@@ -348,7 +347,7 @@ export class DataParserService {
   private surgeryNameToSurgeryId(surgeryName: string) {
     const surgeryIdRegex = surgeryName.match(/\d+/);
 
-    if(surgeryIdRegex) {
+    if (surgeryIdRegex) {
       return parseInt(surgeryIdRegex[0]);
     } else {
       throw new Error("Could not infer surgery ID from the given surgery name");

@@ -9,6 +9,8 @@ import {DataForwardService} from "../service/data-forward.service";
 import {FormDataService} from "../service/form-data.service";
 import {LabelDataService} from "../service/label-data.service";
 import {CrossValSplit} from "../model/CrossValSplit";
+import { CONSTANTS } from '../constants';
+import * as d3 from "d3";
 
 @Component({
   selector: 'app-upload',
@@ -86,8 +88,24 @@ export class UploadComponent implements OnInit {
       const fileMatches = this.dataParserService.matchPhaseAndInstFiles(this.uploadedFiles, this.phaseId, this.instId);
 
       // parse
-      this.labelDataService.phaseLabels = this.dataParserService.splitString(this.phaseLabels)
+      this.labelDataService.phaseLabels = this.dataParserService.splitString(this.phaseLabels);
+      CONSTANTS.phaseMapping = d3.scaleOrdinal<string>()
+        .domain(d3.range(this.labelDataService.phaseLabels.length).map(String))
+        .range(this.labelDataService.phaseLabels);
+
+      CONSTANTS.phaseMappingInverse = d3.scaleOrdinal<string>()
+        .domain(CONSTANTS.phaseMapping.range())
+        .range(CONSTANTS.phaseMapping.domain());
+  
       this.labelDataService.instLabels = this.dataParserService.splitString(this.instLabels);
+      const instCopy = [...this.labelDataService.instLabels, CONSTANTS.idleLabel]
+      CONSTANTS.instrumentMapping = d3.scaleOrdinal<string>()
+        .domain(d3.range(instCopy.length).map(String))
+        .range(instCopy);
+
+      CONSTANTS.instrumentMappingInverse = d3.scaleOrdinal<string>()
+        .domain(CONSTANTS.instrumentMapping.range())
+        .range(CONSTANTS.instrumentMapping.domain());
 
       let dataset = fileMatches.map(([phaseFile, instFile]) => {
         return this.dataParserService.parseData(phaseFile, instFile, this.phaseId, this.delimiter);

@@ -12,6 +12,7 @@ import {DataCounterSelection} from "../model/DataCounterSelection";
 import {SetMethods} from "../util/SetMethods";
 import {PhaseSelectionService} from "../service/phase-selection.service";
 import {InstrumentSelectionService} from "../service/instrument-selection.service";
+import {WordWrap} from "../util/WordWrap";
 
 @Component({
   selector: 'app-inst-coocurrence',
@@ -93,7 +94,7 @@ export class InstCoocurrenceComponent implements OnInit {
   private drawGraph() {
     const barChartHeight = 35;
     const chartPadding = 60;
-    const radius = this.svgWidth / 2.22 - barChartHeight - chartPadding;
+    const radius = this.svgWidth / 2.3 - barChartHeight - chartPadding;
     const nodeRadius = 10;
 
     // get all necessary data
@@ -224,6 +225,7 @@ export class InstCoocurrenceComponent implements OnInit {
             .attr('opacity', 0)
             .attr('fill', d => d3.color(CONSTANTS.datasetColors(d.object))!.darker(1).toString())
             .text(d => d3.format('.2s')(d.value))
+            // .call(WordWrap.wrap, 15, 5)
         )
     });
 
@@ -269,6 +271,14 @@ export class InstCoocurrenceComponent implements OnInit {
           .style('cursor', 'pointer')
           .attr('transform', (_, i) => `translate(${Math.round(this.instIdxToXCoord(i, angle, radius + barChartHeight + labelMargin))} ${Math.round(this.instIdxToYCoord(i, angle, radius + barChartHeight + labelMargin))})`)
           .text(d => CONSTANTS.instrumentMapping(d.object))
+          // .attr('dy', (d, i) => {
+          //   if (angle * i < Math.PI / 2 || angle * i > 2 * Math.PI * 0.75) {
+          //     return "-1.1em"
+          //   } else {
+          //     return 0
+          //   }
+          // })
+          .call(WordWrap.wrap, 1000, 5)
           .on('click', (e, d) => {
             let selectionCandidates:DataCounterSelection<Set<string>, DataCounterNew<string, number>[]>[] = [];
             if (this.clickedInst.includes(d.object)) { // unselect

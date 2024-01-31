@@ -3,8 +3,8 @@ import {BaseType} from 'd3';
 
 // TODO: convert to service
 export class WordWrap {
-  public static wrap(selection: d3.Selection<SVGTextElement, string, BaseType, unknown>, scale: d3.ScaleBand<string>, yPadding?: number) {
-    selection.each((d, i, nodes) => { // for each text element
+  public static wrap(selection: d3.Selection<SVGTextElement, any, BaseType, unknown>, lineWidth: number, yPadding?: number) {
+    selection.each((_, i, nodes) => { // for each text element
       let text = d3.select(nodes[i]),
         words = text.text().split(/\s+/).reverse(),
         word,
@@ -13,11 +13,12 @@ export class WordWrap {
         lineHeight = 1.1, // ems
         y = text.attr("y") || 0,
         dy = parseFloat(text.attr("dy")),
-        width = scale.bandwidth() - (yPadding || 0),
+        width = lineWidth - (yPadding || 0),
         tspan = text.text(null) // empty tspan element
           .append("tspan")
           .attr("x", 0)
           .attr("y", y)
+          .attr('alignment-baseline', 'inherit') // todo: temporary solution
           .attr("dy", dy + "em");
 
       while (word = words.pop()) { // for every word in the text element
@@ -32,6 +33,7 @@ export class WordWrap {
           tspan = text.append("tspan") // add new tspan element with the previously removed word
             .attr("x", 0)
             .attr("y", y)
+            .attr('alignment-baseline', 'inherit') // todo: temporary solution
             .attr("dy", ++lineNumber * lineHeight + dy + "em")
             .text(word);
         }

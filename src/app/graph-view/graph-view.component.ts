@@ -135,7 +135,7 @@ export class GraphViewComponent implements OnInit {
       .join(
         enter => enter.append('text')
           .attr('class', 'phase-label-nr')
-          .attr('font-size', 12)
+          .attr('font-size', 14)
           .attr('fill', 'black')
           .attr('text-anchor', 'middle')
           .attr('dy', '1em')
@@ -147,12 +147,12 @@ export class GraphViewComponent implements OnInit {
       .join(
         enter => enter.append('text')
           .attr('class', 'phase-label')
-          .attr('font-size', 12)
+          .attr('font-size', 14)
           .attr('fill', 'black')
           .attr('text-anchor', 'middle')
           .attr('dy', '2.1em')
           .text(CONSTANTS.phaseMapping)
-          .call(WordWrap.wrap, phaseScale, 5)
+          .call(WordWrap.wrap, phaseScale.bandwidth(), 5)
       );
 
     d3.select('.graph-view-separators')
