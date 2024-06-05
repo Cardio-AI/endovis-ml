@@ -5,16 +5,14 @@
 EndovisML is a data visualization tool that allows interactive exploration of dataset splits for surgical phase and instrument recognition. In particular, this application focuses on the visualization of distributions of phases, phase transitions, instruments, and instrument combinations. Due to the complex nature and the heterogeneity of surgeries, surgical workflow datasets are often inherently imbalanced. When splitting imbalanced datasets into training, validation, and test sets, some classes may not be sufficiently represented in one of the splits which may lead to misleading performance evaluation results. With the help of this application, the user can visualize a chosen dataset split and identify potential issues, e.g., a class not being represented in one of the sets. To use this application the user needs to upload phase and instrument annotations in CSV format as well as define dataset splits.
 
 ## Loading of datasets
-A special feature of this application is the ability to load custom datasets into the application for further exploration and analysis. To do this, the user needs to upload phase and instrument annotation files in CSV format along with a special configuration file. The software does not require video data or video frames.
-
-The configuration file should be named `param.json` and follow JSON format. Filenames of phase and instrument annotations should be structured as follows:
+A special feature of this application is the ability to load custom datasets into the application for further exploration and analysis. To do this, the user needs to upload phase and instrument annotation files in CSV format. The software does not require video data or video frames. Filenames of phase and instrument annotations should be structured as follows:
 
 - Integer number that uniquely identifies a surgery (henceforth referred to as *surgery ID*)
-- Suffix part that distinguishes phase annotation files from instrument annotation files (e.g., `_phase.csv` for phase and `_ìnst.csv` for instrument annotation files)
+- Suffix part that distinguishes phase annotation files from instrument annotation files (e.g., `phase` for phase and `inst` for instrument annotation files)
 
 Examples of valid filenames: `video10_phase.csv`, `video10_inst.csv`.
 
-Note that the software currently supports only one-to-one mapping of phase and instrument annotation files. Consequently, a surgery is comprised of a single phase annotation file and a single instrument annotation file.
+Note that the software currently supports only one-to-one mapping of phase and instrument annotation files. Furthermore, the application expects both phase and instrument annotations for each surgery. Consequently, a surgery is comprised of a single phase annotation file and a single instrument annotation file.
 
 ### Phase annotation files
 Phase annotation files should be formatted according to the following rules: 
@@ -69,30 +67,35 @@ Frame,Grasper,Bipolar,Hook,Scissors,Clipper,Irrigator,SpecimenBag
 ...
 ```
 
-### Configuration file
-Apart from phase and instrument annotation files, the application requires a JSON configuration file that provides additional information about the dataset and the dataset split. The configuration file should contain the following attributes:
+### Configuration file (optional)
+To avoid configuring the application on every page reload, the user may provide a JSON file containing all configuration parameters. The configuration file should contain the following attributes:
 
-- `phaseFileSuffix`: Suffix part of filenames that is specific for phase annotation files (e.g., `_phase.csv`)
-- `instFileSuffix`: Suffix part of filenames that is specific for instrument annotation files (e.g., `_inst.csv`)
+- `delimiter`: CSV-delimiter used in the phase and instrument annotation files. This attribute may hold the following values (case-sensitive):
+    - `comma`: The values are comma-separated
+    - `tab`: The values are tab-separated
+    - `semicolon`: The values are semicolon-separated
+- `phaseId`: Suffix part of filenames that is specific for phase annotation files (e.g., `phase` in `video10_phase.csv`)
+- `instId`: Suffix part of filenames that is specific for instrument annotation files (e.g., `inst` in `video10_inst.csv`)
 - `phaseLabels`: List of phase labels (ordered)
 - `instLabels`: List of instrument labels
-- `splits`: A list of surgery IDs for cross-validation splits
+- `crossValSplits`: A list of surgery IDs for cross-validation splits
 - `testSplit`: List of surgery IDs for the holdout test set
 
 See the example configuration file below.
 
 ```JSON
 {
-  "phaseFileSuffix": "_phase.csv",
-  "instFileSuffix": "_tool.csv",
+  "delimiter": "comma",
+  "phaseId": "phase",
+  "instId": "tool",
   "phaseLabels": [
-    "PlacementTrocars",
     "Preparation",
-    "ClippingCutting",
-    "GallbladderDissection",
-    "RetrievingGallbladder",
-    "Hemostasis",
-    "DrainageClosing"
+    "Calot triangle dissection",
+    "Clipping cutting",
+    "Gallbladder dissection",
+    "Gallbladder packaging",
+    "Cleaning coagulation",
+    "Gallbladder retraction"
   ],
   "instLabels": [
     "Grasper",
@@ -103,7 +106,7 @@ See the example configuration file below.
     "Irrigator",
     "SpecimenBag"
   ],
-  "splits": [
+  "crossValSplits": [
     {
       "train": [1, 2, 3, 4, 5, 6],
       "validation": [7, 8]
