@@ -1,5 +1,7 @@
 # EndovisML
 
+__Link to the live application: https://cardio-ai.github.io/endovis-ml/__
+
 ![overview screenshot](assets/overview.gif)
 
 EndovisML is a data visualization tool that allows interactive exploration of dataset splits for surgical phase and instrument recognition. In particular, this application focuses on the visualization of distributions of phases, phase transitions, instruments, and instrument combinations. Due to the complex nature and the heterogeneity of surgeries, surgical workflow datasets are often inherently imbalanced. When splitting imbalanced datasets into training, validation, and test sets, some classes may not be sufficiently represented in one of the splits which may lead to misleading performance evaluation results. With the help of this application, the user can visualize a chosen dataset split and identify potential issues, e.g., a class not being represented in one of the sets. To use this application the user needs to upload phase and instrument annotations in CSV format as well as define dataset splits.
@@ -117,16 +119,18 @@ See the example configuration file below.
 ```
 
 ## Citation
-This work was presented at the [14th International Conference on Information Processing in Computer-Assisted Interventions (IPCAI 2023)](https://www.ipcai.org/home) as a long abstract. Publication preprint is available at [arXiv](https://doi.org/10.48550/arXiv.2306.16879). Please cite this work if you use the code in your own work.
+This work was presented at the [14th International Conference on Information Processing in Computer-Assisted Interventions (IPCAI 2023)](https://sites.google.com/view/ipcai-2023/home) as long abstract and published in the [International Journal of Computer Assisted Radiology and Surgery (IJCARS)](https://link.springer.com/article/10.1007/s11548-024-03063-9) as original article. Please cite this work if you use the code in your own work.
 
 ```BibTeX
-@misc{Kostiuchik2023,
-      title={Surgical Phase and Instrument Recognition: How to identify appropriate Dataset Splits}, 
-      author={Georgii Kostiuchik and Lalith Sharan and Benedikt Mayer and Ivo Wolf and Bernhard Preim and Sandy Engelhardt},
-      year={2023},
-      eprint={2306.16879},
-      archivePrefix={arXiv},
-      primaryClass={cs.LG}
+@Article{Kostiuchik2024,
+  author    = {Kostiuchik, Georgii and Sharan, Lalith and Mayer, Benedikt and Wolf, Ivo and Preim, Bernhard and Engelhardt, Sandy},
+  journal   = {International Journal of Computer Assisted Radiology and Surgery},
+  title     = {Surgical phase and instrument recognition: how to identify appropriate dataset splits},
+  year      = {2024},
+  issn      = {1861-6429},
+  month     = jan,
+  doi       = {10.1007/s11548-024-03063-9},
+  publisher = {Springer Science and Business Media LLC},
 }
 ```
 
