@@ -4,6 +4,8 @@ import {DataParserService} from "../service/data-parser.service";
 import {DataForwardService} from "../service/data-forward.service";
 import {LabelDataService} from "../service/label-data.service";
 import {Router} from "@angular/router";
+import { CONSTANTS } from '../constants';
+import * as d3 from "d3";
 
 @Component({
   selector: 'app-landing',
@@ -27,9 +29,25 @@ export class LandingComponent implements OnInit {
     paramFilePromise.then((file) => {
       const paramFile = this.dataParserService.parseParamFile(file);
 
-      // store labels
+      // store labels (overlap with process_files() in upload.component)
       this.labelDataService.phaseLabels = paramFile.phaseLabels;
+      CONSTANTS.phaseMapping = d3.scaleOrdinal<string>()
+        .domain(d3.range(this.labelDataService.phaseLabels.length).map(String))
+        .range(this.labelDataService.phaseLabels);
+
+      CONSTANTS.phaseMappingInverse = d3.scaleOrdinal<string>()
+        .domain(CONSTANTS.phaseMapping.range())
+        .range(CONSTANTS.phaseMapping.domain());
+
       this.labelDataService.instLabels = paramFile.instLabels;
+      const instCopy = [...this.labelDataService.instLabels, CONSTANTS.idleLabel]
+      CONSTANTS.instrumentMapping = d3.scaleOrdinal<string>()
+        .domain(d3.range(instCopy.length).map(String))
+        .range(instCopy);
+      
+      CONSTANTS.instrumentMappingInverse = d3.scaleOrdinal<string>()
+        .domain(CONSTANTS.instrumentMapping.range())
+        .range(CONSTANTS.instrumentMapping.domain());
 
       return paramFile;
     }).then(paramFile => {
